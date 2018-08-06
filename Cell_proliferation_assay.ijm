@@ -14,7 +14,7 @@
 macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 
 	requires("1.51u");
-	patern=newArray(2);
+	pattern=newArray(2);
 	firstRound=true;
 
 	//Name the channels
@@ -24,8 +24,8 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	Dialog.addString("Nuclei", "DAPI", 5);
 	Dialog.addString("Nucleoside analogue", "Cy3", 5);
 	Dialog.show();
-	patern[0]=Dialog.getString();
-	patern[1]=Dialog.getString();
+	pattern[0]=Dialog.getString();
+	pattern[1]=Dialog.getString();
 
 	//choose a directory
 	dir = getDirectory("Choose a Directory");
@@ -37,7 +37,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		}
 	}
 
-	//check that the directory contains pictures
+	//check that the directory contains images
 	if (tiffFiles==0) {
 		beep();
 		waitForUser("Error", "No tiff files");
@@ -68,12 +68,12 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	}
 
 	wellName=newArray(nWells);
-	picturesxwell = (tiffFiles / nWells);
-	picturesxfield = (tiffFiles / nFields);
+	imagesxwell = (tiffFiles / nWells);
+	imagesxfield = (tiffFiles / nFields);
 	fieldsxwell = nFields / nWells;
 
 	for (i=0; i<nWells; i++) {
-		wellName[i]=well[i*picturesxwell];
+		wellName[i]=well[i*imagesxwell];
 	}
 
 	//select wells to be analysed
@@ -103,41 +103,41 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		exit;
 	}
 
-	//open pictures
+	//open images
 	count=0;
 	for (z=0; z<nWells; z++) { //nWells FOR statement beginning
 		count2=0;
 		while (count2 < fieldsxwell) { //count2 WHILE  statement beginning
 			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
-				for (i=0; i<picturesxfield; i++) {
+				for (i=0; i<imagesxfield; i++) {
 					open(list[count]);
 					count++;
 				}
 				count2++;
 				
-				//check that the correct number of pictures have been opened
-				if (nImages==picturesxfield) { //nImages IF statement beginning
-					fileArray=newArray(picturesxfield);
+				//check that the correct number of images have been opened
+				if (nImages==imagesxfield) { //nImages IF statement beginning
+					fileArray=newArray(imagesxfield);
 
 					//channel identification
-					for (i=1; i<=picturesxfield; i++) {
+					for (i=1; i<=imagesxfield; i++) {
 						selectImage(i);
 						ima1=getTitle();
 						fileArray[i-1]=ima1;
 					}
 
-					for (j=1; j<=picturesxfield; j++) {
-						for (i=1; i<=picturesxfield; i++) {
-							if (indexOf (fileArray[i-1], patern[j-1])>0) {
+					for (j=1; j<=imagesxfield; j++) {
+						for (i=1; i<=imagesxfield; i++) {
+							if (indexOf (fileArray[i-1], pattern[j-1])>0) {
 								selectImage(fileArray[i-1]);
-								rename (patern[j-1]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+								rename (pattern[j-1]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
 								run("8-bit");
 							}
 						}
 					}
 
 					//maxima filter
-					selectImage(patern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+					selectImage(pattern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
 					run("Subtract Background...", "rolling=50");
 					run("Enhance Contrast...", "saturated=0.4 normalize");
 					run("Find Maxima...", "noise=100 output=[Count]");
@@ -145,7 +145,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 					run("Clear Results");					
 					if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
 						//nuclei segmentation
-						selectImage(patern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+						selectImage(pattern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
 						run("Gaussian Blur...", "sigma=2");
 						setAutoThreshold("MaxEntropy dark");
 						setOption("BlackBackground", false);
@@ -156,8 +156,8 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 						run("Watershed");
 				
 						//nucleoside analogue segmentation
-						selectImage(patern[1]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
-						rename(patern[1]);
+						selectImage(pattern[1]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+						rename(pattern[1]);
 						run("Gaussian Blur...", "sigma=5");
 						run("Subtract Background...", "rolling=50");
 						run("Enhance Contrast...", "saturated=0.1 normalize");
@@ -170,50 +170,50 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 						run("Options...", "iterations=2 count=1 do=Open");	
 		
 						//nucleus to nucleus analysis
-						selectImage(patern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+						selectImage(pattern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
 						run("Analyze Particles...", " size=20-300 show=[Count Masks] display clear");					
-						rename(patern[0]+"-Count Masks");
+						rename(pattern[0]+"-Count Masks");
 						run("8-bit");
-						close(patern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
+						close(pattern[0]+ " (" +wellName[z]+ " fld " +field[count-1]+ ")");
 						nFeat=nResults;
 						run("Clear Results");
-						pictureResults=newArray(nFeat);
-						pictureDataname=newArray(nFeat);
+						imageResults=newArray(nFeat);
+						imageDataname=newArray(nFeat);
 						//single nucleus segmentation
 						for (i=1; i<=nFeat; ++1) { //nucleus to nucleus analysis FOR statement beginning
-							nameNucleous=patern[0]+"-"+i;
-							nameM1=patern[1]+"-"+i;
+							nameNucleous=pattern[0]+"-"+i;
+							nameM1=pattern[1]+"-"+i;
 							run("Set Measurements...", "display redirect=None decimal=2");
-							selectImage(patern[0]+"-Count Masks");
+							selectImage(pattern[0]+"-Count Masks");
 							run("Duplicate...", "title="+nameNucleous);
 							setThreshold(i, i);
 							run("Convert to Mask");
 							run("Make Binary");
 	
 							//binary reconstruct of nucleoside analogue
-							run("BinaryReconstruct ", "mask="+patern[1]+ " seed="+nameNucleous+" create white");
+							run("BinaryReconstruct ", "mask="+pattern[1]+ " seed="+nameNucleous+" create white");
 							rename(nameM1);
 							run("Analyze Particles...", " size=0-Infinity show=Nothing display clear");
 							
 							//store results
 							results=nResults;
 							if (results>0) {
-								pictureResults[i-1]=1;
+								imageResults[i-1]=1;
 							} else {
-								pictureResults[i-1]=0;
+								imageResults[i-1]=0;
 							}
 							run("Clear Results");
 							close(nameM1);
 							close(nameNucleous);
-							pictureDataname[i-1]=wellName[z]+ " fld " +field[count-1];
+							imageDataname[i-1]=wellName[z]+ " fld " +field[count-1];
 							if(i==nFeat) {
 								if(firstRound==true) {
-									marker1=pictureResults;
-									dataname=pictureDataname;
+									marker1=imageResults;
+									dataname=imageDataname;
 									firstRound=false;
 								} else {
-									marker1=Array.concat(marker1, pictureResults);
-									dataname=Array.concat(dataname, pictureDataname);
+									marker1=Array.concat(marker1, imageResults);
+									dataname=Array.concat(dataname, imageDataname);
 								}
 							}
 						} //nucleus to nucleus analysis FOR statement ending
@@ -229,7 +229,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 					cleanUp();
 				} //nImages IF-ELSE statement ending
 			} else { //checkbox ELSE statement
-				count += picturesxwell;
+				count += imagesxwell;
 				count2 = fieldsxwell;
 			} //checkbox IF-ELSE statement ending
 		} //count2 WHILE  statement ending
