@@ -1,15 +1,15 @@
 /*
  * Pau Carrillo-Barberà, José M. Morante-Redolat, José F. Pertusa
- * Department of Cellular & Functional Biology
+ * Molecular Neurobiology Lab - ERI BIOTECMED
  * University of Valencia
  * 
- * August 2018
+ * February 2018
+ * Last update: August 10, 2018
  */
 
-//This macro is a non-supervised, high-throughput image analysis tool for ex vivo
-//cell proliferation assays based on nucleoside analogue pulse alone or in combi-
-//nation with other nuclear markers (it requires several changes in the macro, de-
-//pending on the extra markers).
+//This macro is a non-supervised, high-content bioimage data analysis tool for ex vivo
+//cell proliferation assays based on nucleoside analogue pulse alone or in combination
+//with up to two additional nuclear markers.
 
 macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 
@@ -45,8 +45,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	//check that the directory contains images
 	if (tiffFiles==0) {
 		beep();
-		waitForUser("Error", "No tiff files");
-		exit;
+		exit("No tiff files")
 	}
 
 	//manage files
@@ -57,18 +56,20 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	well0=substring(list[0],0,6);
 	field0=substring(list[0],11,14);
 
-	for (i=0; i<tiffFiles; i++) {
-		well[i]=substring(list[i],0,6);
-		field[i]=substring(list[i],11,14);
-		well1=substring(list[i],0,6);
-		field1=substring(list[i],11,14);
-		if (field0!=field1 || well1!=well0) {
-			nFields++;
-			field0=substring(list[i],11,14);
-		}
-		if (well1!=well0) {
-			nWells++;
-			well0=substring(list[i],0,6);
+	for (i=0; i<list.length; i++) {
+		if (endsWith(list[i], "tif")) {
+			well[i]=substring(list[i],0,6);
+			field[i]=substring(list[i],11,14);
+			well1=substring(list[i],0,6);
+			field1=substring(list[i],11,14);
+			if (field0!=field1 || well1!=well0) {
+				nFields++;
+				field0=substring(list[i],11,14);
+			}
+			if (well1!=well0) {
+				nWells++;
+				well0=substring(list[i],0,6);
+			}
 		}
 	}
 
@@ -76,9 +77,6 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	imagesxwell = (tiffFiles / nWells);
 	imagesxfield = (tiffFiles / nFields);
 	fieldsxwell = nFields / nWells;
-
-	//print(nWells, imagesxwell, imagesxfield, fieldsxwell);
-	//exit;
 
 	for (i=0; i<nWells; i++) {
 		wellName[i]=well[i*imagesxwell];
@@ -107,8 +105,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	}
 
 	if (checkSelection == 0) {
-		waitForUser("Error", "There is no well selected");
-		exit;
+		exit("There is no well selected");
 	}
 
 	//open images
@@ -272,7 +269,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	title2 = "["+title1+"]";
 	f = title2;
 	run("Table...", "name="+title2+" width=500 height=500");
-	print(f, "\\Headings:n\tdataname\tS-phase\tmarker1\tmarker2");
+	print(f, "\\Headings:n\tdataname\tS-phase\t"+pattern[2]+"\t"+pattern[3]);
 	for (i=0; i<nucleosideAnalogue.length; i++) {
 		print(f, i+1 + "\t" + dataname[i]+ "\t" + nucleosideAnalogue[i] + "\t" + marker1[i] + "\t" + marker2[i]);
 	}
