@@ -4,7 +4,7 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: August 15, 2018
+ * Last update: August 17, 2018
  */
 
 //This macro is a non-supervised, high-content bioimage data analysis tool for ex vivo
@@ -57,29 +57,23 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		//calculate: number of wells, images per well, images per field and fields per well
 		nWells=1;
 		nFields=1;
-		count=0;
 		well=newArray(tiffFiles);
 		field=newArray(tiffFiles);
+		well0=substring(tiffArray[0],0,6);
+		field0=substring(tiffArray[0],11,14);
 	
-		for (i=0; i<list.length; i++) {
-			if (endsWith(list[i], "tif")) {
-				if(count==0) {
-					well0=substring(list[i],0,6);
-					field0=substring(list[i],11,14);
-				}
-				well[count]=substring(list[i],0,6);
-				field[count]=substring(list[i],11,14);
-				well1=substring(list[i],0,6);
-				field1=substring(list[i],11,14);
-				if (field0!=field1 || well1!=well0) {
-					nFields++;
-					field0=substring(list[i],11,14);
-				}
-				if (well1!=well0) {
-					nWells++;
-					well0=substring(list[i],0,6);
-				}
-				count++;
+		for (i=0; i<tiffArray.length; i++) {
+			well[i]=substring(tiffArray[i],0,6);
+			field[i]=substring(tiffArray[i],11,14);
+			well1=substring(tiffArray[i],0,6);
+			field1=substring(tiffArray[i],11,14);
+			if (field0!=field1 || well1!=well0) {
+				nFields++;
+				field0=substring(tiffArray[i],11,14);
+			}
+			if (well1!=well0) {
+				nWells++;
+				well0=substring(tiffArray[i],0,6);
 			}
 		}
 	
@@ -91,15 +85,11 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		//create an array containing the names of the channels
 		channels=newArray(imagesxfield+1);
 		count=0;
-		for (i=0; i<list.length; i++) {
-			if (endsWith(list[i], "tif")) {
-				if(well[0]==substring(list[i],0,6) && field[0]==substring(list[i],11,14)) {
-					index1=indexOf(list[i], "wv ");
-					index2=lastIndexOf(list[i], " - ");
-					channels[count]=substring(list[i], index1+3, index2);
-					count++;
-				}
-			}
+		while (channels.length > count+1) {
+			index1=indexOf(tiffArray[count], "wv ");
+			index2=lastIndexOf(tiffArray[count], " - ");
+			channels[count]=substring(tiffArray[count], index1+3, index2);
+			count++;
 		}
 		
 		//add an "Empty" option into the channels name array
@@ -123,7 +113,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		Dialog.addString("", "parameter_dataset", 30);
 		html = "<html>"
 			+"Having generated a <b><font color=black>parameter dataset</font></b> txt file using the<br>"
-			+"<b><font color=red>Pre-Analysis (parameter tweaking)</font></b> mode it is posible to<br>"
+			+"<b><font color=red>Pre-Analysis (parameter tweaking)</font></b> mode it is possible to<br>"
 			+"browse the file to apply the pre-established parameters";
 		Dialog.addHelp(html);
 		Dialog.show()
