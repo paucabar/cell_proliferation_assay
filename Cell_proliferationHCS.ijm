@@ -4,7 +4,7 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: August 17, 2018
+ * Last update: August 18, 2018
  */
 
 //This macro is a non-supervised, high-content bioimage data analysis tool for ex vivo
@@ -320,13 +320,22 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 			wellName[i]=well[i*imagesxwell];
 		}
 	
-		//select wells to be analysed
+		//select wells
 		fileCheckbox=newArray(nWells);
 		selection=newArray(nWells);
 		title = "Select Wells";
 		Dialog.create(title);
 		Dialog.addCheckbox("Select All", true);
 		Dialog.addCheckboxGroup(8, 12, wellName, selection);
+		if(mode=="Pre-Analysis (parameter tweaking)") {
+			if(fieldsxwell>=10) {
+				maxRandomFields=10;
+			} else {
+				maxRandomFields=fieldsxwell;
+			}
+			Dialog.setInsets(0, 174, 0);
+			Dialog.addSlider("Random fields", 1, maxRandomFields, maxRandomFields);
+		}
 		Dialog.show();
 		selectAll=Dialog.getCheckbox();
 		for (i=0; i<nWells; i++) {
@@ -334,6 +343,9 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 			if (selectAll==true) {
 				fileCheckbox[i]=true;
 			}
+		}
+		if(mode=="Pre-Analysis (parameter tweaking)") {
+			maxRandomFields=Dialog.getNumber();
 		}
 	
 		//check that at least one well have been selected
@@ -456,57 +468,64 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	if(mode=="Pre-Analysis (parameter tweaking)") {
 		//open images
 		setBatchMode(true);
-		count=0;
 		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
-			count2=0;
-			while (count2 < fieldsxwell) { //count2 WHILE  statement beginning
-				if (fileCheckbox[z]==true) { //checkbox IF statement beginning
-					for (i=0; i<imagesxfield; i++) {
-						open(dir+"\\"+tiffArray[count]);
-						count++;
+			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
+				randomArray=newArray(maxRandomFields);
+				options=fieldsxwell;
+				count=0;
+				while (count < randomArray.length) {
+					recurrent=false;
+					number=round((options-1)*random);
+					for(i=count-1; i>=0; i--) {
+						if (number==randomArray[i]) {
+							recurrent=true;
+						}
 					}
-					count2++;
-					
-					//check that the correct number of images have been opened
-					if (nImages==imagesxfield) { //nImages IF statement beginning
-						//channel identification
-						channelIdentification(imagesxfield, pattern);
-	
-						//nuclei & nucleoside analogue ---> 8-bits
-						selectImage(pattern[0]);
-						run("8-bit");
-						selectImage(pattern[1]);
-						run("8-bit");
-						run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
-						run("Stack to RGB");
-						rename("RGB");
-	
-						//maxima filter
-						aproxN=maximaFilter(pattern[0]);
-						if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
-							//segmentation
-							//nuclei segmentation
-							segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
-							//nucleoside analogue segmentation
-							segmentationPreAnalysis(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside, "RGB", minNucleoside, maxNucleoside, 255, 105, 0);							
-							//save as tiff
-							saveAs("tiff", outputFolderPath+"\\"+wellName[z]+" fld "+field[count-1]);
+					if(recurrent==false || count==0) {
+						for (i=0; i<imagesxfield; i++) {
+							open(dir+"\\"+tiffArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
+						}
+
+						//check that the correct number of images have been opened
+						if (nImages==imagesxfield) { //nImages IF statement beginning
+							//channel identification
+							channelIdentification(imagesxfield, pattern);
+		
+							//nuclei & nucleoside analogue ---> 8-bits
+							selectImage(pattern[0]);
+							run("8-bit");
+							selectImage(pattern[1]);
+							run("8-bit");
+							run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
+							run("Stack to RGB");
+							rename("RGB");
+		
+							//maxima filter
+							aproxN=maximaFilter(pattern[0]);
+							if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
+								//segmentation
+								//nuclei segmentation
+								segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
+								//nucleoside analogue segmentation
+								segmentationPreAnalysis(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside, "RGB", minNucleoside, maxNucleoside, 255, 105, 0);							
+								//save as tiff
+								saveAs("tiff", outputFolderPath+"\\"+wellName[z]+" fld "+field[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)]);
+								cleanUp();
+								randomArray[count]=number;
+								count++;
+							//major loops endings
+							} else { //maxima filter ELSE statement
+								beep();
+								cleanUp();
+							} //maxima filter IF-ELSE statement ending
 							cleanUp();
-						//major loops endings
-						} else { //maxima filter ELSE statement
+						} else { //nImages ELSE statement
 							beep();
 							cleanUp();
-						} //maxima filter IF-ELSE statement ending
-						cleanUp();
-					} else { //nImages ELSE statement
-						beep();
-						cleanUp();
-					} //nImages IF-ELSE statement ending
-				} else { //checkbox ELSE statement
-					count += imagesxwell;
-					count2 = fieldsxwell;
-				} //checkbox IF-ELSE statement ending
-			} //count2 WHILE  statement ending
+						} //nImages IF-ELSE statement ending
+					}
+				}
+			}
 		} //nWells FOR statement ending
 		
 		setBatchMode(false);
