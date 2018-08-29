@@ -1,10 +1,11 @@
 /*
- * Pau Carrillo-Barberà, José M. Morante-Redolat, José F. Pertusa
+ * Cell_proliferationHCS
+ * Authors: Pau Carrillo-Barberà, José M. Morante-Redolat, José F. Pertusa
  * Molecular Neurobiology Lab - ERI BIOTECMED
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: August 18, 2018
+ * Last update: August 27, 2018
  */
 
 //This macro is a non-supervised, high-content bioimage data analysis tool for ex vivo
@@ -12,33 +13,38 @@
 //with up to two additional nuclear markers.
 
 
-macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
+macro "Cell_proliferationHCS" {
 
-//choose a directory
-#@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)"}, style="radioButtonVertical") mode
+//choose a macro mode and a directory
+#@ String (label=" ", value="<html><font size=6><b>High-Content <font color=navy>Screening</font><br><font color=red>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
+#@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)", "Format Conversion"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
 #@ String (label=" ", value="<html><img src=\"http://oi64.tinypic.com/5pqgm.jpg\"></html>", visibility=MESSAGE, persist=false) logo
-#@ String (label=" ", value="<html><b>Funded by the <font color=red>Galactic Empire</font></b></html>", visibility=MESSAGE, persist=false) message
+#@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
 
 	requires("1.52e");
 
-	if (mode!="Pre-Analysis (visualization)") {
-		pattern=newArray(4);
-		firstRound=true;
+	if (mode=="Analysis" || mode=="Pre-Analysis (parameter tweaking)") {
 		
-		//dir = getDirectory("Choose a Directory");
+		//create an array containing the names of the files in the directory path
 		list = getFileList(dir);
 		Array.sort(list);
 		tiffFiles=0;
 	
-		//post the number of TIFF files
+		//count the number of TIFF files
 		for (i=0; i<list.length; i++) {
 			if (endsWith(list[i], "tif")) {
 				tiffFiles++;
 			}
 		}
 
-		//create a tiff array
+		//check that the directory contains TIFF files
+		if (tiffFiles==0) {
+			beep();
+			exit("No TIFF files")
+		}
+
+		//create a an array containing only the names of the TIFF files in the directory path
 		tiffArray=newArray(tiffFiles);
 		count=0;
 		for (i=0; i<list.length; i++) {
@@ -46,12 +52,6 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 				tiffArray[count]=list[i];
 				count++;
 			}
-		}
-	
-		//check that the directory contains images
-		if (tiffFiles==0) {
-			beep();
-			exit("No tiff files")
 		}
 	
 		//calculate: number of wells, images per well, images per field and fields per well
@@ -103,7 +103,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		channelsSlice=Array.slice(channels, 0, channels.length-1);
 
 		//browse a parameter dataset file (optional) & define output folder and dataset file names
-		dirName=substring(dir, lastIndexOf(dir, "\\")+1, lengthOf(dir))+"_RESULTS";
+		dirName=File.getName(dir)+"_RESULTS";
 		radioButtonItems=newArray("Yes", "No");
 		Dialog.create("Input & Output");
 		Dialog.addRadioButtonGroup("Browse a pre-established parameter dataset", radioButtonItems, 1, 2, "No");
@@ -122,8 +122,9 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		datasetFile=Dialog.getString();
 
 		//set some parameter menu arrays
-		enhanceContrastOptions=newArray("0", "0.1", "0.2", "0.3", "0.4");
+		enhanceContrastOptions=newArray("0", "0.1", "0.2", "0.3", "0.4", "None");
 		threshold=getList("threshold.methods");
+		pattern=newArray(4);
 
 		if(browseDataset=="Yes") {
 			parametersDatasetPath=File.openDialog("Choose the parameter dataset file to Open:");
@@ -188,14 +189,14 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		Dialog.create(title);
 		Dialog.setInsets(0, 170, 0);
 		Dialog.addMessage("CHANNEL SELECTION:");
-		Dialog.addChoice("Nuclei", channels, pattern[0]);
+		Dialog.addChoice("Nuclei", channelsSlice, pattern[0]);
 		Dialog.addToSameRow();
-		Dialog.addChoice("Nucleoside analogue", channels, pattern[1]);
+		Dialog.addChoice("Nucleoside analogue", channelsSlice, pattern[1]);
 		Dialog.addChoice("Marker_1", channels, pattern[2]);
 		Dialog.addToSameRow();
 		Dialog.addChoice("Marker_2", channels, pattern[3]);
 		Dialog.setInsets(0, 170, 0);
-		Dialog.addMessage("NUCLEI SEGMENTATION:");
+		Dialog.addMessage("NUCLEI WORKFLOW:");
 		Dialog.addNumber("Subtract Background (rolling)", rollingNuclei);
 		Dialog.addToSameRow();
 		Dialog.addChoice("Enhance Contrast", enhanceContrastOptions, enhanceNuclei);
@@ -211,7 +212,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		Dialog.addToSameRow();
 		Dialog.addNumber("Size (max)", maxNuclei);
 		Dialog.setInsets(0, 170, 0);
-		Dialog.addMessage("NUCLEOSIDE ANALOGUE SEGMENTATION:");
+		Dialog.addMessage("NUCLEOSIDE ANALOGUE WORKFLOW:");
 		Dialog.addNumber("Subtract Background (rolling)", rollingNucleoside);
 		Dialog.addToSameRow();
 		Dialog.addChoice("Enhance Contrast", enhanceContrastOptions, enhanceNucleoside);
@@ -278,7 +279,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		}
 
 		//create an output directory
-		outputFolderLocation=substring(dir, 0, lastIndexOf(dir, "\\"));
+		outputFolderLocation=File.getParent(dir);
 		outputFolderPath=outputFolderLocation+"\\"+outputFolder;
 		File.makeDirectory(outputFolderPath);
 		
@@ -333,8 +334,8 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 			} else {
 				maxRandomFields=fieldsxwell;
 			}
-			Dialog.setInsets(0, 174, 0);
-			Dialog.addSlider("Random fields", 1, maxRandomFields, maxRandomFields);
+			Dialog.addMessage("Random fields per well:");
+			Dialog.addSlider("", 1, maxRandomFields, maxRandomFields);
 		}
 		Dialog.show();
 		selectAll=Dialog.getCheckbox();
@@ -363,6 +364,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		//open images
 		setBatchMode(true);
 		count=0;
+		firstRound=true;
 		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
 			count2=0;
 			while (count2 < fieldsxwell) { //count2 WHILE  statement beginning
@@ -398,7 +400,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 							rename(pattern[1]);
 							close("Segmented");
 			
-							//nucleus-to-nucleus analysis
+							//One by one nuclei analysis
 							//create count masks image
 							nFeat=createCountMasks(pattern[0], minNuclei, maxNuclei);
 							imageResults=newArray(nFeat);
@@ -406,7 +408,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 							meanResult2=newArray(nFeat);
 							imageDataname=newArray(nFeat);
 							//single nucleus segmentation
-							for (i=1; i<=nFeat; ++1) { //nucleus to nucleus analysis FOR statement beginning
+							for (i=1; i<=nFeat; ++1) { //nucleus by nucleus analysis FOR statement beginning
 								nameNucleous=pattern[0]+"-"+i;
 								nameM1=pattern[1]+"-"+i;
 								//nucleoside analogue
@@ -435,7 +437,7 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 									}
 									
 								}
-							} //nucleus to nucleus analysis FOR statement ending
+							} //nucleus by nucleus analysis FOR statement ending
 							cleanUp();
 						
 						//major loops endings
@@ -496,13 +498,14 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 							run("8-bit");
 							selectImage(pattern[1]);
 							run("8-bit");
-							run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
-							run("Stack to RGB");
-							rename("RGB");
 		
 							//maxima filter
 							aproxN=maximaFilter(pattern[0]);
 							if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
+								//merge channels
+								run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
+								run("Stack to RGB");
+								rename("RGB");
 								//segmentation
 								//nuclei segmentation
 								segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
@@ -573,11 +576,13 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	function segmentation(image, rolling, enhance, gaussian, threshold, erode, openArg, watershed) { //SEGMENTATION function beginning
 		selectImage(image);
 		run("Subtract Background...", rolling);
-		run("Enhance Contrast...", "saturated="+enhance+" normalize");
+		if(enhance!="None") {
+			run("Enhance Contrast...", "saturated="+enhance+" normalize");
+		}
 		run("Gaussian Blur...", "sigma="+gaussian);
 		setAutoThreshold(threshold+" dark");
-		setOption("BlackBackground", false);
 		run("Convert to Mask");
+		setOption("BlackBackground", false);
 		run("Fill Holes");
 		run("Options...", "iterations="+erode+" count=1 do=Erode");
 		run("Options...", "iterations="+openArg+" count=1 do=Open");
@@ -644,11 +649,13 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 	function segmentationPreAnalysis(image, rolling, enhance, gaussian, threshold, erode, openArg, watershed, preview, min, max, r, g, b) { //SEGMENTATION function beginning
 		selectImage(image);
 		run("Subtract Background...", rolling);
-		run("Enhance Contrast...", "saturated="+enhance+" normalize");
+		if(enhance!="None") {
+			run("Enhance Contrast...", "saturated="+enhance+" normalize");
+		}
 		run("Gaussian Blur...", "sigma="+gaussian);
 		setAutoThreshold(threshold+" dark");
-		setOption("BlackBackground", false);
 		run("Convert to Mask");
+		setOption("BlackBackground", false);
 		run("Fill Holes");
 		run("Options...", "iterations="+erode+" count=1 do=Erode");
 		run("Options...", "iterations="+openArg+" count=1 do=Open");
@@ -681,4 +688,4 @@ macro "Cell_proliferation_assay" { //BEGING (Macro:Cell_proliferation_assay.ijm)
 		}
 	} //CLEAN-UP function ending
 	
-} //END (Macro:Cell_proliferation_assay.ijm)
+}
