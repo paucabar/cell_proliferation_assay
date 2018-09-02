@@ -360,6 +360,14 @@ macro "Cell_proliferationHCS" {
 		}
 	}
 
+	if(mode=="Format Conversion") {
+		formats=newArray("Operetta", "NIS Elements");
+		Dialog.create("Input Format");
+		Dialog.addRadioButtonGroup("Select:", formats, formats.length, 1, formats[0]);
+		Dialog.show()
+		inputFormat=Dialog.getRadioButton();
+	}
+
 	if(mode=="Analysis") {
 		//open images
 		setBatchMode(true);
@@ -538,6 +546,59 @@ macro "Cell_proliferationHCS" {
 
 	if(mode=="Pre-Analysis (visualization)") {
 		run("Image Sequence...", "open=["+dir+"] file=tif sort");
+	}
+
+	if(mode=="Format Conversion") {
+		if(inputFormat=="Operetta") {
+			//create an array containing the names of the files in the directory path
+			list = getFileList(dir);
+			Array.sort(list);
+			tiffFiles=0;
+		
+			//count the number of TIFF files
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
+					tiffFiles++;
+				}
+			}
+	
+			//check that the directory contains TIFF files
+			if (tiffFiles==0) {
+				beep();
+				exit("No TIFF files")
+			}
+	
+			//create a an array containing only the names of the TIFF files in the directory path
+			tiffArray=newArray(tiffFiles);
+			count=0;
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
+					tiffArray[count]=list[i];
+					count++;
+				}
+			}
+			//create an output directory
+			outputFolderPath=dir+"\\Format Conversion";
+			File.makeDirectory(outputFolderPath);
+
+			setBatchMode(true);
+			for(i=0; i<tiffArray.length; i++) {
+				open(dir+"\\"+tiffArray[i]);
+				well=substring(tiffArray[i], 0, 6);
+				fIndex=indexOf(tiffArray[i], "f");
+				pIndex=indexOf(tiffArray[i], "p");
+				field=substring(tiffArray[i], fIndex+1, pIndex);
+				while(lengthOf(field)<3) {
+					field="0"+field;
+				}
+				chIndex=indexOf(tiffArray[i], "ch");
+				skIndex=indexOf(tiffArray[i], "sk");
+				channel=substring(tiffArray[i], chIndex, skIndex);
+				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
+				close();
+			}
+			setBatchMode(false);
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
