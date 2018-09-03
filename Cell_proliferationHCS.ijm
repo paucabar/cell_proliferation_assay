@@ -16,10 +16,10 @@
 macro "Cell_proliferationHCS" {
 
 //choose a macro mode and a directory
-#@ String (label=" ", value="<html><font size=6><b>High-Content <font color=navy>Screening</font><br><font color=red>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
+#@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)", "Format Conversion"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
-#@ String (label=" ", value="<html><img src=\"http://oi64.tinypic.com/5pqgm.jpg\"></html>", visibility=MESSAGE, persist=false) logo
+#@ String (label=" ", value="<html><img src=\"http://oi64.tinypic.com/ekrmvs.jpg\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
 
 	requires("1.52e");
