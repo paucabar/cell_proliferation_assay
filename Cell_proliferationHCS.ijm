@@ -599,6 +599,68 @@ macro "Cell_proliferationHCS" {
 			}
 			setBatchMode(false);
 		}
+
+		if(inputFormat=="NIS Elements") {
+			//create an array containing the names of the files in the directory path
+			list = getFileList(dir);
+			Array.sort(list);
+			tiffFiles=0;
+		
+			//count the number of TIFF files
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif")) {
+					tiffFiles++;
+				}
+			}
+	
+			//check that the directory contains TIFF files
+			if (tiffFiles==0) {
+				beep();
+				exit("No TIFF files")
+			}
+	
+			//create a an array containing only the names of the TIFF files in the directory path
+			tiffArray=newArray(tiffFiles);
+			count=0;
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif")) {
+					tiffArray[count]=list[i];
+					count++;
+				}
+			}
+			//create an output directory
+			outputFolderPath=dir+"\\Format Conversion";
+			File.makeDirectory(outputFolderPath);
+
+			//dialog box
+			Dialog.create("NIS Elements");
+			Dialog.addSlider("Digits (field):", 1, 3, 3);
+			Dialog.show()
+			digits=Dialog.getNumber();
+
+			setBatchMode(true);
+			for(i=0; i<tiffArray.length; i++) {
+				open(dir+"\\"+tiffArray[i]);
+				extensionIndex=indexOf(tiffArray[i], ".tif");
+				cLastIndex=lastIndexOf(tiffArray[i], "c");
+				channel=substring(tiffArray[i], cLastIndex, extensionIndex);
+				field=substring(tiffArray[i], cLastIndex-digits, cLastIndex);
+				while(lengthOf(field)<3) {
+					field="0"+field;
+				}
+				if(cLastIndex-digits<=6) {
+					well=substring(tiffArray[i], 0, cLastIndex-digits);
+					while(lengthOf(well)<6) {
+						well+=" ";
+					}
+				} else {
+					well=substring(tiffArray[i], 0, 6);
+				}
+				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
+				close();
+			}
+			setBatchMode(false);
+		}
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
