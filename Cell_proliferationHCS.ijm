@@ -370,8 +370,17 @@ macro "Cell_proliferationHCS" {
 
 	if(mode=="Analysis") {
 		//open images
+		print("Initializing 'Analysis' mode");
+		wellsToAnalyze=0;
+		for(i=0; i<fileCheckbox.length; i++) {
+			if(fileCheckbox[i]==true) {
+				wellsToAnalyze++;
+			}
+		}
+		fieldsToAnalyze=fieldsxwell*wellsToAnalyze;
 		setBatchMode(true);
 		count=0;
+		count3=0;
 		firstRound=true;
 		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
 			count2=0;
@@ -382,6 +391,9 @@ macro "Cell_proliferationHCS" {
 						count++;
 					}
 					count2++;
+					count3++;
+					wellAndFieldName=wellName[z]+ " fld " +field[count-1];
+					print("Analyzing: "+wellAndFieldName+" ("+count3+"/"+fieldsToAnalyze+")");
 					
 					//check that the correct number of images have been opened
 					if (nImages==imagesxfield) { //nImages IF statement beginning
@@ -429,7 +441,7 @@ macro "Cell_proliferationHCS" {
 								close(nameM1);
 								close(nameNucleous);
 								
-								imageDataname[i-1]=wellName[z]+ " fld " +field[count-1];
+								imageDataname[i-1]=wellAndFieldName;
 								if(i==nFeat) {
 									if(firstRound==true) {
 										nucleosideAnalogue=imageResults;
@@ -473,10 +485,12 @@ macro "Cell_proliferationHCS" {
 		saveAs("txt", outputFolderPath+"\\Results table");
 		selectWindow("Results table");
 		run("Close");
+		print("End of process");
 	}
 
 	if(mode=="Pre-Analysis (parameter tweaking)") {
 		//open images
+		print("Initializing 'Pre-Analysis' mode");
 		setBatchMode(true);
 		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
 			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
@@ -495,6 +509,8 @@ macro "Cell_proliferationHCS" {
 						for (i=0; i<imagesxfield; i++) {
 							open(dir+"\\"+tiffArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
 						}
+						
+						print("Pre-Analyzing: "+wellName[z]+" ("+count+1+"/"+randomArray.length+")");
 
 						//check that the correct number of images have been opened
 						if (nImages==imagesxfield) { //nImages IF statement beginning
@@ -540,6 +556,7 @@ macro "Cell_proliferationHCS" {
 		} //nWells FOR statement ending
 		
 		setBatchMode(false);
+		print("End of process");
 		//visualization
 		run("Image Sequence...", "open=["+outputFolderPath+"] file=tif sort");
 	}
@@ -549,6 +566,7 @@ macro "Cell_proliferationHCS" {
 	}
 
 	if(mode=="Format Conversion") {
+		print("Initializing 'Format Conversion' mode");
 		if(inputFormat=="Operetta") {
 			//create an array containing the names of the files in the directory path
 			list = getFileList(dir);
@@ -584,6 +602,7 @@ macro "Cell_proliferationHCS" {
 			setBatchMode(true);
 			for(i=0; i<tiffArray.length; i++) {
 				open(dir+"\\"+tiffArray[i]);
+				print("Load: "+tiffArray[i]);
 				well=substring(tiffArray[i], 0, 6);
 				fIndex=indexOf(tiffArray[i], "f");
 				pIndex=indexOf(tiffArray[i], "p");
@@ -596,6 +615,7 @@ macro "Cell_proliferationHCS" {
 				channel=substring(tiffArray[i], chIndex, skIndex);
 				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
 				close();
+				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
 			}
 			setBatchMode(false);
 		}
@@ -641,6 +661,7 @@ macro "Cell_proliferationHCS" {
 			setBatchMode(true);
 			for(i=0; i<tiffArray.length; i++) {
 				open(dir+"\\"+tiffArray[i]);
+				print("Load: "+tiffArray[i]);
 				extensionIndex=indexOf(tiffArray[i], ".tif");
 				cLastIndex=lastIndexOf(tiffArray[i], "c");
 				channel=substring(tiffArray[i], cLastIndex, extensionIndex);
@@ -658,9 +679,11 @@ macro "Cell_proliferationHCS" {
 				}
 				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
 				close();
+				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
 			}
 			setBatchMode(false);
 		}
+		print("End of process");
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
