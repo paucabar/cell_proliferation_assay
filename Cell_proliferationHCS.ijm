@@ -103,14 +103,19 @@ macro "Cell_proliferationHCS" {
 		channelsSlice=Array.slice(channels, 0, channels.length-1);
 
 		//browse a parameter dataset file (optional) & define output folder and dataset file names
-		dirName=File.getName(dir)+"_RESULTS";
+		dirName="Output - " + File.getName(dir);
+		resultsName="ResultsTable - " + File.getName(dir);
 		radioButtonItems=newArray("Yes", "No");
 		Dialog.create("Input & Output");
-		Dialog.addRadioButtonGroup("Browse a pre-established parameter dataset", radioButtonItems, 1, 2, "No");
+		Dialog.addRadioButtonGroup("Browse a pre-established parameter dataset:", radioButtonItems, 1, 2, "No");
 		Dialog.addMessage("Output folder:");
-		Dialog.addString("", dirName, 30);
+		Dialog.addString("", dirName, 40);
 		Dialog.addMessage("Output parameter dataset file (txt):");
-		Dialog.addString("", "parameter_dataset", 30);
+		Dialog.addString("", "parameter_dataset", 40);
+		if(mode=="Analysis") {
+			Dialog.addMessage("Results table:");
+			Dialog.addString("", resultsName, 40);
+		}
 		html = "<html>"
 			+"Having generated a <b><font color=black>parameter dataset</font></b> txt file using the<br>"
 			+"<b><font color=red>Pre-Analysis (parameter tweaking)</font></b> mode it is possible to<br>"
@@ -120,6 +125,9 @@ macro "Cell_proliferationHCS" {
 		browseDataset=Dialog.getRadioButton();
 		outputFolder=Dialog.getString();
 		datasetFile=Dialog.getString();
+		if(mode=="Analysis") {
+			resultsTableName=Dialog.getString();
+		}
 
 		//set some parameter menu arrays
 		enhanceContrastOptions=newArray("0", "0.1", "0.2", "0.3", "0.4", "None");
@@ -279,8 +287,7 @@ macro "Cell_proliferationHCS" {
 		}
 
 		//create an output directory
-		outputFolderLocation=File.getParent(dir);
-		outputFolderPath=outputFolderLocation+"\\"+outputFolder;
+		outputFolderPath=dir+"\\"+outputFolder;
 		File.makeDirectory(outputFolderPath);
 		
 		//create parameter dataset
