@@ -5,10 +5,10 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: August 27, 2018
+ * Last update: September 5, 2018
  */
 
-//This macro is a non-supervised, high-content bioimage data analysis tool for ex vivo
+//This macro is a high-content bioimage data analysis tool for ex vivo
 //cell proliferation assays based on nucleoside analogue pulse alone or in combination
 //with up to two additional nuclear markers.
 
@@ -565,11 +565,11 @@ macro "Cell_proliferationHCS" {
 		setBatchMode(false);
 		print("End of process");
 		//visualization
-		run("Image Sequence...", "open=["+outputFolderPath+"] file=tif sort");
+		setVisualization(outputFolderPath);
 	}
 
 	if(mode=="Pre-Analysis (visualization)") {
-		run("Image Sequence...", "open=["+dir+"] file=tif sort");
+		open(dir+"\\"+"Multi-image.tif");
 	}
 
 	if(mode=="Format Conversion") {
@@ -840,5 +840,35 @@ macro "Cell_proliferationHCS" {
 			run("Close");
 		}
 	} //CLEAN-UP function ending
+
+	function setVisualization(folder) {
+		setBatchMode(true);
+		run("Image Sequence...", "open=["+folder+"] file=tif sort");
+		width=getWidth(); 
+		height=getHeight();
+		setBackgroundColor(255, 255, 255);
+		run("Canvas Size...", "width="+width+width*0.05+" height="+height+" position=Center");
+		width=getWidth();
+		run("Canvas Size...", "width="+width+" height="+height+height*0.025+" position=Bottom-Center");
+		height=getHeight();
+		run("Canvas Size...", "width="+width+" height="+height+height*0.10+" position=Top-Center");
+		Stack.getDimensions(width, finalHeight, channels, slices, frames);
+		for (i=1; i<=slices; i++) {
+			Stack.setSlice(i);
+			setForegroundColor(0, 255, 255);
+			setLineWidth(height*0.005);
+			drawLine(width*0.1, height+height*0.033, width*0.2, height+height*0.033);
+			setForegroundColor(255, 105, 0);
+			drawLine(width*0.1, height+height*0.066, width*0.2, height+height*0.066);
+			setForegroundColor(0, 0, 0);
+			setFont("SansSerif", height*0.025);
+			setJustification("left");
+			drawString("Nuclei segmentation outlines", width*0.25, height+(height*0.033)+(height*0.01));
+			drawString("Nucleoside analogue segmentation outlines", width*0.25, height+(height*0.066)+(height*0.01));
+		}
+		Stack.setSlice(1);
+		setBatchMode(false);
+		saveAs("tiff", folder+"\\Multi-image");
+	}
 	
 }
