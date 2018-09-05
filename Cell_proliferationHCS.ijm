@@ -1,16 +1,16 @@
 /*
  * Cell_proliferationHCS
  * Authors: Pau Carrillo-Barberà, José M. Morante-Redolat, José F. Pertusa
- * Molecular Neurobiology Lab - ERI BIOTECMED
+ * Department of Cellular & Functional Biology
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
  * Last update: September 5, 2018
  */
 
-//This macro is a high-content bioimage data analysis tool for ex vivo
-//cell proliferation assays based on nucleoside analogue pulse alone or in combination
-//with up to two additional nuclear markers.
+//This macro is a high-content screening tool for cell proliferation assays of
+//adherent cell cultures. It is based on nucleoside analogue pulse alone or in
+//combination with up to two additional nuclear markers.
 
 
 macro "Cell_proliferationHCS" {
@@ -489,7 +489,7 @@ macro "Cell_proliferationHCS" {
 		//results table
 		resultsTable("Results table", pattern[2], pattern[3], dataname, nucleosideAnalogue, marker1, marker2);
 		//save as txt
-		saveAs("txt", outputFolderPath+"\\Results table");
+		saveAs("txt", outputFolderPath+"\\"+resultsTableName);
 		selectWindow("Results table");
 		run("Close");
 		print("End of process");
