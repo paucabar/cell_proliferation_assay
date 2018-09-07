@@ -365,6 +365,8 @@ macro "Cell_proliferationHCS" {
 		if (checkSelection == 0) {
 			exit("There is no well selected");
 		}
+
+		setOption("BlackBackground", false);
 	}
 
 	if(mode=="Format Conversion") {
@@ -735,7 +737,6 @@ macro "Cell_proliferationHCS" {
 		run("Gaussian Blur...", "sigma="+gaussian);
 		setAutoThreshold(threshold+" dark");
 		run("Convert to Mask");
-		setOption("BlackBackground", false);
 		run("Fill Holes");
 		run("Options...", "iterations="+erode+" count=1 do=Erode");
 		run("Options...", "iterations="+openArg+" count=1 do=Open");
@@ -808,7 +809,6 @@ macro "Cell_proliferationHCS" {
 		run("Gaussian Blur...", "sigma="+gaussian);
 		setAutoThreshold(threshold+" dark");
 		run("Convert to Mask");
-		setOption("BlackBackground", false);
 		run("Fill Holes");
 		run("Options...", "iterations="+erode+" count=1 do=Erode");
 		run("Options...", "iterations="+openArg+" count=1 do=Open");
