@@ -5,7 +5,7 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: September 5, 2018
+ * Last update: September 11, 2018
  */
 
 //This macro is a high-content screening tool for cell proliferation assays of
@@ -17,7 +17,7 @@ macro "Cell_proliferationHCS" {
 
 //choose a macro mode and a directory
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
-#@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)", "Format Conversion"}, style="radioButtonVertical") mode
+#@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)", "Filename Transformation"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
 #@ String (label=" ", value="<html><img src=\"http://oi64.tinypic.com/ekrmvs.jpg\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
@@ -369,7 +369,7 @@ macro "Cell_proliferationHCS" {
 		setOption("BlackBackground", false);
 	}
 
-	if(mode=="Format Conversion") {
+	if(mode=="Filename Transformation") {
 		formats=newArray("Operetta", "NIS Elements");
 		Dialog.create("Input Format");
 		Dialog.addRadioButtonGroup("Select:", formats, formats.length, 1, formats[0]);
@@ -574,8 +574,8 @@ macro "Cell_proliferationHCS" {
 		open(dir+"\\"+"Multi-image.tif");
 	}
 
-	if(mode=="Format Conversion") {
-		print("Initializing 'Format Conversion' mode");
+	if(mode=="Filename Transformation") {
+		print("Initializing 'Filename Transformation' mode");
 		if(inputFormat=="Operetta") {
 			//create an array containing the names of the files in the directory path
 			list = getFileList(dir);
@@ -605,7 +605,7 @@ macro "Cell_proliferationHCS" {
 				}
 			}
 			//create an output directory
-			outputFolderPath=dir+"\\Format Conversion";
+			outputFolderPath=dir+"\\Filename Transformation";
 			File.makeDirectory(outputFolderPath);
 
 			setBatchMode(true);
@@ -658,7 +658,7 @@ macro "Cell_proliferationHCS" {
 				}
 			}
 			//create an output directory
-			outputFolderPath=dir+"\\Format Conversion";
+			outputFolderPath=dir+"\\Filename Transformation";
 			File.makeDirectory(outputFolderPath);
 
 			//dialog box
