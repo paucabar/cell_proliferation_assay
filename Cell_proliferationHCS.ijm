@@ -24,27 +24,158 @@ macro "Cell_proliferationHCS" {
 
 	requires("1.52e");
 
-	if (mode=="Analysis" || mode=="Pre-Analysis (parameter tweaking)") {
+	//Filename Transformation
+	if(mode=="Filename Transformation") {
+		formats=newArray("Operetta", "NIS Elements");
+		Dialog.create("Input Format");
+		Dialog.addRadioButtonGroup("Select:", formats, formats.length, 1, formats[0]);
+		Dialog.show()
+		inputFormat=Dialog.getRadioButton();
+		print("Initializing 'Filename Transformation' mode");
+
+		//Operetta
+		if(inputFormat=="Operetta") {
+			//create an array containing the names of the files in the directory path
+			list = getFileList(dir);
+			Array.sort(list);
+			tiffFiles=0;
 		
+			//count the number of TIF files
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
+					tiffFiles++;
+				}
+			}
+	
+			//check that the directory contains TIF files
+			if (tiffFiles==0) {
+				beep();
+				exit("No TIFF files")
+			}
+	
+			//create a an array containing only the names of the TIF files in the directory path
+			tiffArray=newArray(tiffFiles);
+			count=0;
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
+					tiffArray[count]=list[i];
+					count++;
+				}
+			}
+			//create an output directory
+			outputFolderPath=dir+"\\Filename Transformation";
+			File.makeDirectory(outputFolderPath);
+
+			setBatchMode(true);
+			for(i=0; i<tiffArray.length; i++) {
+				open(dir+"\\"+tiffArray[i]);
+				print("Load: "+tiffArray[i]);
+				well=substring(tiffArray[i], 0, 6);
+				fIndex=indexOf(tiffArray[i], "f");
+				pIndex=indexOf(tiffArray[i], "p");
+				field=substring(tiffArray[i], fIndex+1, pIndex);
+				while(lengthOf(field)<3) {
+					field="0"+field;
+				}
+				chIndex=indexOf(tiffArray[i], "ch");
+				skIndex=indexOf(tiffArray[i], "sk");
+				channel=substring(tiffArray[i], chIndex, skIndex);
+				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
+				close();
+				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
+			}
+			setBatchMode(false);
+		}
+
+		//NIS Elements
+		if(inputFormat=="NIS Elements") {
+			//create an array containing the names of the files in the directory path
+			list = getFileList(dir);
+			Array.sort(list);
+			tiffFiles=0;
+		
+			//count the number of TIF files
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif")) {
+					tiffFiles++;
+				}
+			}
+	
+			//check that the directory contains TIF files
+			if (tiffFiles==0) {
+				beep();
+				exit("No TIFF files")
+			}
+	
+			//create a an array containing only the names of the TIF files in the directory path
+			tiffArray=newArray(tiffFiles);
+			count=0;
+			for (i=0; i<list.length; i++) {
+				if (endsWith(list[i], "tif")) {
+					tiffArray[count]=list[i];
+					count++;
+				}
+			}
+			//create an output directory
+			outputFolderPath=dir+"\\Filename Transformation";
+			File.makeDirectory(outputFolderPath);
+
+			//dialog box
+			Dialog.create("NIS Elements");
+			Dialog.addSlider("Digits (field):", 1, 3, 3);
+			Dialog.show()
+			digits=Dialog.getNumber();
+
+			setBatchMode(true);
+			for(i=0; i<tiffArray.length; i++) {
+				open(dir+"\\"+tiffArray[i]);
+				print("Load: "+tiffArray[i]);
+				extensionIndex=indexOf(tiffArray[i], ".tif");
+				cLastIndex=lastIndexOf(tiffArray[i], "c");
+				channel=substring(tiffArray[i], cLastIndex, extensionIndex);
+				field=substring(tiffArray[i], cLastIndex-digits, cLastIndex);
+				while(lengthOf(field)<3) {
+					field="0"+field;
+				}
+				if(cLastIndex-digits<=6) {
+					well=substring(tiffArray[i], 0, cLastIndex-digits);
+					while(lengthOf(well)<6) {
+						well+=" ";
+					}
+				} else {
+					well=substring(tiffArray[i], 0, 6);
+				}
+				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
+				close();
+				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
+			}
+			setBatchMode(false);
+		}
+		print("End of process");
+	}
+
+	//File management
+	if (mode=="Analysis" || mode=="Pre-Analysis (parameter tweaking)") {
+		//Identification of the TIF files
 		//create an array containing the names of the files in the directory path
 		list = getFileList(dir);
 		Array.sort(list);
 		tiffFiles=0;
 	
-		//count the number of TIFF files
+		//count the number of TIF files
 		for (i=0; i<list.length; i++) {
 			if (endsWith(list[i], "tif")) {
 				tiffFiles++;
 			}
 		}
 
-		//check that the directory contains TIFF files
+		//check that the directory contains TIF files
 		if (tiffFiles==0) {
 			beep();
 			exit("No TIFF files")
 		}
 
-		//create a an array containing only the names of the TIFF files in the directory path
+		//create a an array containing only the names of the TIF files in the directory path
 		tiffArray=newArray(tiffFiles);
 		count=0;
 		for (i=0; i<list.length; i++) {
@@ -53,7 +184,8 @@ macro "Cell_proliferationHCS" {
 				count++;
 			}
 		}
-	
+
+		//Extraction of the ‘well’ and ‘field’ information from the images’ filenames
 		//calculate: number of wells, images per well, images per field and fields per well
 		nWells=1;
 		nFields=1;
@@ -81,7 +213,8 @@ macro "Cell_proliferationHCS" {
 		imagesxwell = (tiffFiles / nWells);
 		imagesxfield = (tiffFiles / nFields);
 		fieldsxwell = nFields / nWells;
-	
+
+		//Extraction of the ‘channel’ information from the images’ filenames
 		//create an array containing the names of the channels
 		channels=newArray(imagesxfield+1);
 		count=0;
@@ -92,20 +225,23 @@ macro "Cell_proliferationHCS" {
 			count++;
 		}
 		
-		//add an "Empty" option into the channels name array
+		//add an 'Empty' option into the channels name array
 		for (i=0; i<channels.length; i++) {
 			if(i>=imagesxfield) {
 				channels[i]="Empty";
 			}
 		}
 	
-		//create a channel array without the "Empty" option
+		//create a channel array without the 'Empty' option
 		channelsSlice=Array.slice(channels, 0, channels.length-1);
 
+
+		//‘Pre-Analysis (parameter tweaking)’ and ‘Analysis’ parameterization
 		//browse a parameter dataset file (optional) & define output folder and dataset file names
 		dirName="Output - " + File.getName(dir);
 		resultsName="ResultsTable - " + File.getName(dir);
 		radioButtonItems=newArray("Yes", "No");
+		//‘Input & Output’ dialog box
 		Dialog.create("Input & Output");
 		Dialog.addRadioButtonGroup("Browse a pre-established parameter dataset:", radioButtonItems, 1, 2, "No");
 		Dialog.addMessage("Output folder:");
@@ -134,6 +270,7 @@ macro "Cell_proliferationHCS" {
 		threshold=getList("threshold.methods");
 		pattern=newArray(4);
 
+		//Extract values from a parameter dataset file
 		if(browseDataset=="Yes") {
 			parametersDatasetPath=File.openDialog("Choose the parameter dataset file to Open:");
 			//parameter selection (pre-established)
@@ -192,7 +329,8 @@ macro "Cell_proliferationHCS" {
 			maxNucleoside=300;
 		}
 	
-		//parameter selection (edit)
+		//'Select Parameters' dialog box
+		//edit parameters
 		title = "Select Parameters";
 		Dialog.create(title);
 		Dialog.setInsets(0, 170, 0);
@@ -286,11 +424,11 @@ macro "Cell_proliferationHCS" {
 			exit("Addititional marker ["+pattern[2]+"]/["+pattern[3]+"] channels can not be the same")
 		}
 
-		//create an output directory
+		//Create an output folder
 		outputFolderPath=dir+"\\"+outputFolder;
 		File.makeDirectory(outputFolderPath);
 		
-		//create parameter dataset
+		//Create a parameter dataset file
 		title1 = "Parameter dataset";
 		title2 = "["+title1+"]";
 		f = title2;
@@ -318,7 +456,7 @@ macro "Cell_proliferationHCS" {
 		print(f, "Size-Min (nucleoside)\t" + minNucleoside);
 		print(f, "Size-Max (nucleoside)\t" + maxNucleoside);
 
-		//save as txt
+		//save as TXT
 		saveAs("txt", outputFolderPath+"\\"+datasetFile);
 		selectWindow(title1);
 		run("Close");
@@ -328,7 +466,7 @@ macro "Cell_proliferationHCS" {
 			wellName[i]=well[i*imagesxwell];
 		}
 	
-		//select wells
+		//'Well Selection' dialog box
 		fileCheckbox=newArray(nWells);
 		selection=newArray(nWells);
 		title = "Select Wells";
@@ -369,16 +507,83 @@ macro "Cell_proliferationHCS" {
 		setOption("BlackBackground", false);
 	}
 
-	if(mode=="Filename Transformation") {
-		formats=newArray("Operetta", "NIS Elements");
-		Dialog.create("Input Format");
-		Dialog.addRadioButtonGroup("Select:", formats, formats.length, 1, formats[0]);
-		Dialog.show()
-		inputFormat=Dialog.getRadioButton();
+	//Pre-Analysis workflow
+	if(mode=="Pre-Analysis (parameter tweaking)") {
+		print("Initializing 'Pre-Analysis' mode");
+		setBatchMode(true);
+		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
+			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
+				randomArray=newArray(maxRandomFields);
+				options=fieldsxwell;
+				count=0;
+				//Random selection of fields
+				while (count < randomArray.length) {
+					recurrent=false;
+					number=round((options-1)*random);
+					for(i=count-1; i>=0; i--) {
+						if (number==randomArray[i]) {
+							recurrent=true;
+						}
+					}
+					if(recurrent==false || count==0) {
+						//Open images
+						for (i=0; i<imagesxfield; i++) {
+							open(dir+"\\"+tiffArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
+						}
+						
+						print("Pre-Analyzing: "+wellName[z]+" ("+count+1+"/"+randomArray.length+")");
+
+						//Channel images checkpoint
+						if (nImages==imagesxfield) { //nImages IF statement beginning
+							//Channel identification
+							channelIdentification(imagesxfield, pattern);
+		
+							//8-bits conversion (nuclei & nucleoside analogue)
+							selectImage(pattern[0]);
+							run("8-bit");
+							selectImage(pattern[1]);
+							run("8-bit");
+		
+							//maximaFilter checkpoint
+							aproxN=maximaFilter(pattern[0]);
+							if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
+								//Merge channels
+								run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
+								run("Stack to RGB");
+								rename("RGB");
+								//Draw the outlines of the nuclei and nucleoside analogue binary masks
+								//Nuclei segmentation
+								segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
+								//Nucleoside analogue segmentation
+								segmentationPreAnalysis(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside, "RGB", minNucleoside, maxNucleoside, 255, 105, 0);							
+								//Save the image
+								saveAs("tiff", outputFolderPath+"\\"+wellName[z]+" fld "+field[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)]);
+								//Clean up
+								cleanUp();
+								randomArray[count]=number;
+								count++;
+							} else { //maxima filter ELSE statement
+								beep();
+								cleanUp();
+							} //maxima filter IF-ELSE statement ending
+							cleanUp();
+						} else { //nImages ELSE statement
+							beep();
+							cleanUp();
+						} //nImages IF-ELSE statement ending
+					}
+				}
+			}
+		} //nWells FOR statement ending
+		
+		setBatchMode(false);
+		print("End of process");
+		//Visualization
+		setVisualization(outputFolderPath);
 	}
 
+	//Analysis workflow
 	if(mode=="Analysis") {
-		//open images
 		print("Initializing 'Analysis' mode");
 		wellsToAnalyze=0;
 		for(i=0; i<fileCheckbox.length; i++) {
@@ -395,6 +600,7 @@ macro "Cell_proliferationHCS" {
 			count2=0;
 			while (count2 < fieldsxwell) { //count2 WHILE  statement beginning
 				if (fileCheckbox[z]==true) { //checkbox IF statement beginning
+					//Open images
 					for (i=0; i<imagesxfield; i++) {
 						open(dir+"\\"+tiffArray[count]);
 						count++;
@@ -404,52 +610,53 @@ macro "Cell_proliferationHCS" {
 					wellAndFieldName=wellName[z]+ " fld " +field[count-1];
 					print("Analyzing: "+wellAndFieldName+" ("+count3+"/"+fieldsToAnalyze+")");
 					
-					//check that the correct number of images have been opened
+					//Channel images checkpoint
 					if (nImages==imagesxfield) { //nImages IF statement beginning
-						//channel identification
+						//Channel identification
 						channelIdentification(imagesxfield, pattern);
 	
-						//nuclei & nucleoside analogue ---> 8-bits
+						//8-bits conversion (nuclei & nucleoside analogue)
 						selectImage(pattern[0]);
 						run("8-bit");
 						selectImage(pattern[1]);
 						run("8-bit");
 	
-						//maxima filter
+						//maximaFilter checkpoint
 						aproxN=maximaFilter(pattern[0]);
 						if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
 	
-							//segmentation
-							//nuclei segmentation
+							//Nuclei segmentation
 							segmentation(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei);
-							//nucleoside analogue segmentation
+							//Nucleoside analogue segmentation
 							segmentation(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside);
 							rename("Segmented");
+							//Nucleoside analogue size selection
 							run("Analyze Particles...", "size="+minNucleoside+"-"+maxNucleoside+" show=Masks");
 							rename(pattern[1]);
 							close("Segmented");
 			
 							//One by one nuclei analysis
-							//create count masks image
+							//Create a nuclei ‘Count Masks’ image
 							nFeat=createCountMasks(pattern[0], minNuclei, maxNuclei);
 							imageResults=newArray(nFeat);
 							meanResult1=newArray(nFeat);
 							meanResult2=newArray(nFeat);
 							imageDataname=newArray(nFeat);
-							//single nucleus segmentation
+							//Single nucleus segmentation
 							for (i=1; i<=nFeat; ++1) { //nucleus by nucleus analysis FOR statement beginning
 								nameNucleous=pattern[0]+"-"+i;
 								nameM1=pattern[1]+"-"+i;
-								//nucleoside analogue
+								//Nucleoside analogue analysis
 								imageResults[i-1]=nucleosideAnalysis(pattern[0], nameNucleous, i, pattern[1], nameM1);
-								//marker1
+								//Additional marker 1 analysis
 								meanResult1[i-1]=markerAnalysis(pattern[2], nameNucleous);
-								//marker2
+								//Additional marker 2 analysis
 								meanResult2[i-1]=markerAnalysis(pattern[3], nameNucleous);
-								//close binary images of nucleoside analogue nucleous-to-nucleous loop
+								//Close binary images of nucleoside analogue nucleous-by-nucleous loop
 								close(nameM1);
 								close(nameNucleous);
-								
+
+								//Results storage
 								imageDataname[i-1]=wellAndFieldName;
 								if(i==nFeat) {
 									if(firstRound==true) {
@@ -469,7 +676,6 @@ macro "Cell_proliferationHCS" {
 							} //nucleus by nucleus analysis FOR statement ending
 							cleanUp();
 						
-						//major loops endings
 						} else { //maxima filter ELSE statement
 							beep();
 							cleanUp();
@@ -490,213 +696,26 @@ macro "Cell_proliferationHCS" {
 		
 		//results table
 		resultsTable("Results table", pattern[2], pattern[3], dataname, nucleosideAnalogue, marker1, marker2);
-		//save as txt
+		//save as TXT
 		saveAs("txt", outputFolderPath+"\\"+resultsTableName);
 		selectWindow("Results table");
 		run("Close");
 		print("End of process");
 	}
 
-	if(mode=="Pre-Analysis (parameter tweaking)") {
-		//open images
-		print("Initializing 'Pre-Analysis' mode");
-		setBatchMode(true);
-		for (z=0; z<nWells; z++) { //nWells FOR statement beginning
-			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
-				randomArray=newArray(maxRandomFields);
-				options=fieldsxwell;
-				count=0;
-				while (count < randomArray.length) {
-					recurrent=false;
-					number=round((options-1)*random);
-					for(i=count-1; i>=0; i--) {
-						if (number==randomArray[i]) {
-							recurrent=true;
-						}
-					}
-					if(recurrent==false || count==0) {
-						for (i=0; i<imagesxfield; i++) {
-							open(dir+"\\"+tiffArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
-						}
-						
-						print("Pre-Analyzing: "+wellName[z]+" ("+count+1+"/"+randomArray.length+")");
-
-						//check that the correct number of images have been opened
-						if (nImages==imagesxfield) { //nImages IF statement beginning
-							//channel identification
-							channelIdentification(imagesxfield, pattern);
-		
-							//nuclei & nucleoside analogue ---> 8-bits
-							selectImage(pattern[0]);
-							run("8-bit");
-							selectImage(pattern[1]);
-							run("8-bit");
-		
-							//maxima filter
-							aproxN=maximaFilter(pattern[0]);
-							if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
-								//merge channels
-								run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
-								run("Stack to RGB");
-								rename("RGB");
-								//segmentation
-								//nuclei segmentation
-								segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
-								//nucleoside analogue segmentation
-								segmentationPreAnalysis(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside, "RGB", minNucleoside, maxNucleoside, 255, 105, 0);							
-								//save as tiff
-								saveAs("tiff", outputFolderPath+"\\"+wellName[z]+" fld "+field[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)]);
-								cleanUp();
-								randomArray[count]=number;
-								count++;
-							//major loops endings
-							} else { //maxima filter ELSE statement
-								beep();
-								cleanUp();
-							} //maxima filter IF-ELSE statement ending
-							cleanUp();
-						} else { //nImages ELSE statement
-							beep();
-							cleanUp();
-						} //nImages IF-ELSE statement ending
-					}
-				}
-			}
-		} //nWells FOR statement ending
-		
-		setBatchMode(false);
-		print("End of process");
-		//visualization
-		setVisualization(outputFolderPath);
-	}
-
 	if(mode=="Pre-Analysis (visualization)") {
 		open(dir+"\\"+"Multi-image.tif");
 	}
 
-	if(mode=="Filename Transformation") {
-		print("Initializing 'Filename Transformation' mode");
-		if(inputFormat=="Operetta") {
-			//create an array containing the names of the files in the directory path
-			list = getFileList(dir);
-			Array.sort(list);
-			tiffFiles=0;
-		
-			//count the number of TIFF files
-			for (i=0; i<list.length; i++) {
-				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
-					tiffFiles++;
-				}
-			}
-	
-			//check that the directory contains TIFF files
-			if (tiffFiles==0) {
-				beep();
-				exit("No TIFF files")
-			}
-	
-			//create a an array containing only the names of the TIFF files in the directory path
-			tiffArray=newArray(tiffFiles);
-			count=0;
-			for (i=0; i<list.length; i++) {
-				if (endsWith(list[i], "tif") || endsWith(list[i], "tiff")) {
-					tiffArray[count]=list[i];
-					count++;
-				}
-			}
-			//create an output directory
-			outputFolderPath=dir+"\\Filename Transformation";
-			File.makeDirectory(outputFolderPath);
 
-			setBatchMode(true);
-			for(i=0; i<tiffArray.length; i++) {
-				open(dir+"\\"+tiffArray[i]);
-				print("Load: "+tiffArray[i]);
-				well=substring(tiffArray[i], 0, 6);
-				fIndex=indexOf(tiffArray[i], "f");
-				pIndex=indexOf(tiffArray[i], "p");
-				field=substring(tiffArray[i], fIndex+1, pIndex);
-				while(lengthOf(field)<3) {
-					field="0"+field;
-				}
-				chIndex=indexOf(tiffArray[i], "ch");
-				skIndex=indexOf(tiffArray[i], "sk");
-				channel=substring(tiffArray[i], chIndex, skIndex);
-				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
-				close();
-				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
-			}
-			setBatchMode(false);
-		}
 
-		if(inputFormat=="NIS Elements") {
-			//create an array containing the names of the files in the directory path
-			list = getFileList(dir);
-			Array.sort(list);
-			tiffFiles=0;
-		
-			//count the number of TIFF files
-			for (i=0; i<list.length; i++) {
-				if (endsWith(list[i], "tif")) {
-					tiffFiles++;
-				}
-			}
-	
-			//check that the directory contains TIFF files
-			if (tiffFiles==0) {
-				beep();
-				exit("No TIFF files")
-			}
-	
-			//create a an array containing only the names of the TIFF files in the directory path
-			tiffArray=newArray(tiffFiles);
-			count=0;
-			for (i=0; i<list.length; i++) {
-				if (endsWith(list[i], "tif")) {
-					tiffArray[count]=list[i];
-					count++;
-				}
-			}
-			//create an output directory
-			outputFolderPath=dir+"\\Filename Transformation";
-			File.makeDirectory(outputFolderPath);
 
-			//dialog box
-			Dialog.create("NIS Elements");
-			Dialog.addSlider("Digits (field):", 1, 3, 3);
-			Dialog.show()
-			digits=Dialog.getNumber();
 
-			setBatchMode(true);
-			for(i=0; i<tiffArray.length; i++) {
-				open(dir+"\\"+tiffArray[i]);
-				print("Load: "+tiffArray[i]);
-				extensionIndex=indexOf(tiffArray[i], ".tif");
-				cLastIndex=lastIndexOf(tiffArray[i], "c");
-				channel=substring(tiffArray[i], cLastIndex, extensionIndex);
-				field=substring(tiffArray[i], cLastIndex-digits, cLastIndex);
-				while(lengthOf(field)<3) {
-					field="0"+field;
-				}
-				if(cLastIndex-digits<=6) {
-					well=substring(tiffArray[i], 0, cLastIndex-digits);
-					while(lengthOf(well)<6) {
-						well+=" ";
-					}
-				} else {
-					well=substring(tiffArray[i], 0, 6);
-				}
-				saveAs("tiff", outputFolderPath+"\\"+well+"(fld "+field+" wv "+channel+" - "+channel+")");
-				close();
-				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
-			}
-			setBatchMode(false);
-		}
-		print("End of process");
-	}
+
+
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//user-defined functions
+	//User-defined functions
 
 	function channelIdentification(imageNumber, channels) { //CHANNELIDENTIFICATION function beginning
 		fileArray=newArray(imageNumber);
