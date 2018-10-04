@@ -5,7 +5,7 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: September 11, 2018
+ * Last update: October 4, 2018
  */
 
 //This macro is a high-content screening tool for cell proliferation assays of
@@ -85,6 +85,10 @@ macro "Cell_proliferationHCS" {
 				print("Save as: "+well+"(fld "+field+" wv "+channel+" - "+channel+").tif");
 			}
 			setBatchMode(false);
+			print("End of process");
+			print("All the images have been transformed");
+			print("Find the new image dataset at:");
+			print(outputFolderPath);
 		}
 
 		//NIS Elements
@@ -152,6 +156,9 @@ macro "Cell_proliferationHCS" {
 			setBatchMode(false);
 		}
 		print("End of process");
+		print("All the images have been transformed");
+		print("Find the new image dataset at:");
+		print(outputFolderPath);
 	}
 
 	//File management
@@ -578,6 +585,8 @@ macro "Cell_proliferationHCS" {
 		
 		setBatchMode(false);
 		print("End of process");
+		print("Find the output at:");
+		print(outputFolderPath);
 		//Visualization
 		setVisualization(outputFolderPath);
 	}
@@ -701,17 +710,13 @@ macro "Cell_proliferationHCS" {
 		selectWindow("Results table");
 		run("Close");
 		print("End of process");
+		print("Find the results table at:");
+		print(outputFolderPath);
 	}
 
 	if(mode=="Pre-Analysis (visualization)") {
 		open(dir+"\\"+"Multi-image.tif");
 	}
-
-
-
-
-
-
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
