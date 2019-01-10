@@ -5,7 +5,7 @@
  * University of Valencia (Valencia, Spain)
  * 
  * February 2018
- * Last update: October 4, 2018
+ * Last update: January 10, 2019
  */
 
 //This macro is a high-content screening tool for cell proliferation assays of
@@ -617,7 +617,20 @@ macro "Cell_proliferationHCS" {
 					count2++;
 					count3++;
 					wellAndFieldName=wellName[z]+ " fld " +field[count-1];
+					print("\\Clear");
 					print("Analyzing: "+wellAndFieldName+" ("+count3+"/"+fieldsToAnalyze+")");
+					progress=count3/fieldsToAnalyze*100;
+					progressString=d2s(progress, 0);
+					progressBar="|";
+					for (i=2; i<=100; i+=2) {
+						if (progress>=i) {
+							progressBar+="*";
+						} else {
+							progressBar+="-";
+						}
+					}
+					progressBar+="|";
+					print(progressBar, progressString, "%");
 					
 					//Channel images checkpoint
 					if (nImages==imagesxfield) { //nImages IF statement beginning
@@ -709,9 +722,38 @@ macro "Cell_proliferationHCS" {
 		saveAs("txt", outputFolderPath+"\\"+resultsTableName);
 		selectWindow("Results table");
 		run("Close");
+		// From ImageJ website (macro examples GetDateAndTime.txt)
+		// This macro demonstrates how to use the getDateAndTime() 
+		// function, available in ImageJ 1.34n or later.
+		MonthNames = newArray("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+		DayNames = newArray("Sun", "Mon","Tue","Wed","Thu","Fri","Sat");
+		getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
+		TimeString ="Date: "+DayNames[dayOfWeek]+" ";
+		if (dayOfMonth<10) {TimeString = TimeString+"0";}
+		TimeString = TimeString+dayOfMonth+"-"+MonthNames[month]+"-"+year+"\nTime: ";
+		if (hour<10) {TimeString = TimeString+"0";}
+		TimeString = TimeString+hour+":";
+		if (minute<10) {TimeString = TimeString+"0";}
+		TimeString = TimeString+minute+":";
+		if (second<10) {TimeString = TimeString+"0";}
+		TimeString = TimeString+second;
+		title1 = "Info";
+		title2 = "["+title1+"]";
+		fInfo = title2;
+		run("Table...", "name="+title2+" width=500 height=500");
+		print(fInfo, "ImageJ "+getVersion());
+		print(fInfo, TimeString);
+		saveAs("txt", outputFolderPath+"\\Info");
+		selectWindow("Info");
+		run("Close");
+		print("\\Clear");
+		print("ImageJ "+getVersion());
+		print(TimeString);
+		print("");
 		print("End of process");
 		print("Find the results table at:");
 		print(outputFolderPath);
+		print("");
 	}
 
 	if(mode=="Pre-Analysis (visualization)") {
@@ -818,7 +860,7 @@ macro "Cell_proliferationHCS" {
 		title2 = "["+title1+"]";
 		f = title2;
 		run("Table...", "name="+title2+" width=500 height=500");
-		print(f, "\\Headings:n\tdataname\tS-phase\t"+m1+"\t"+m2);
+		print(f, "\\Headings:n\tImage\tS-phase\t"+m1+"\t"+m2);
 		for (i=0; i<nucleosideArray.length; i++) {
 			print(f, i+1 + "\t" + nameArray[i]+ "\t" + nucleosideArray[i] + "\t" + m1Array[i] + "\t" + m2Array[i]);
 		}
