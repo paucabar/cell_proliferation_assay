@@ -19,7 +19,7 @@ macro "Cell_proliferationHCS" {
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)", "Pre-Analysis (visualization)", "Filename Transformation"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
-#@ String (label=" ", value="<html><img src=\"http://oi64.tinypic.com/ekrmvs.jpg\"></html>", visibility=MESSAGE, persist=false) logo
+#@ String (label=" ", value="<html><img src=\"https://live.staticflickr.com/65535/48557333566_d2a51be746_o.png\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
 
 	requires("1.52e");
