@@ -262,7 +262,11 @@ macro "Cell_proliferationHCS" {
 		html = "<html>"
 			+"Having generated a <b><font color=black>parameter dataset</font></b> txt file using the<br>"
 			+"<b><font color=red>Pre-Analysis (parameter tweaking)</font></b> mode it is possible to<br>"
-			+"browse the file to apply the pre-established parameters";
+			+"browse the file to apply the pre-established parameters<br>"
+			+"<br>"
+			+"Check "
+			+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
+			+" for help";
 		Dialog.addHelp(html);
 		Dialog.show()
 		browseDataset=Dialog.getRadioButton();
@@ -381,16 +385,9 @@ macro "Cell_proliferationHCS" {
 		Dialog.addToSameRow();
 		Dialog.addNumber("Size (max)", maxNucleoside);
 		html = "<html>"
-			+"<img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Emblem_of_the_First_Galactic_Empire.svg/220px-Emblem_of_the_First_Galactic_Empire.svg.png\"<br>"
-			+"<br>"
-			+"<font size=+1>"
-			+"<b>Funded by the <font color=red>Galactic Empire</font></b><br>"
-			+"<br>"
-			+"<font size=-1>"
-			+"In ImageJ 1.46b or later, dialog boxes<br>"
-			+"can have a <b>Help</b> button that displays<br>"
-			+"<font color=red>HTML</font> formatted text.<br>"
-			+"</font>";
+			+"Check "
+			+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
+			+" for help";
 		Dialog.addHelp(html);
 		Dialog.show()
 		pattern[0]=Dialog.getChoice();
