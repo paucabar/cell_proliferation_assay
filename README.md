@@ -2,11 +2,23 @@
 
 ## Description
 
-Pulse-chase experiments using 5-bromo-2'-deoxyuridine (BrdU), or the more recent EdU (5-etynil-2'-deoxyuridine), enable the identification of cells going through S phase. This chapter describes a high-content proliferation assay pipeline for adherent cell cultures. High-throughput imaging is followed by high-content data analysis using a non-supervised ImageJ macroinstruction that segments the individual nuclei, determines the nucleoside analogue absence/presence, and measures the signal of up to two additional nuclear markers. Based upon the specific combination with proliferation-specific protein immunostaining, the percentage of cells undergoing different phases of the cell cycle (G0, G1, S, G2, and M) might be established. The method can be also used to estimate the proliferation (S phase) rate of particular cell subpopulations identified through labelling with specific nuclear markers.
+Pulse-chase experiments using 5-bromo-2'-deoxyuridine (BrdU), or the more recent EdU (5-etynil-2'-deoxyuridine), enable the identification of cells going through S phase. Furthermore, these DNA synthesis-based methods can be combined with the detection of proliferation-specific proteins to estimate the percentage of cells in other cell cycle phases, thus obtaining a more detailed analysis of the culture proliferation. One of the most commonly used markers is Ki67, which is present within the nucleus of cycling cells during G1, S, G2, andM phases, but not during quiescence (G0). Additionally, phosphohistone 3 (PHH3) can be used to identify those cells that are specifically undergoing mitosis (M phase). By combining a short nucleoside analogue pulse (S phase) with immunocytochemical
+detection of Ki67 (cycling cells) and PHH3 (M phase), the entire range of cell cycle phases in the sample can be determined. Alternatively, nucleoside pulse-chase may be combined with the detection of other nuclear markers, e.g., antigens associated to specific subpopulations present in the culture, which would allow to estimate the proliferation (S phase) rate of each individual subpopulation.
+
+Our main goal here was to develop a protocol for non-supervised, high throughput image analysis of _ex vivo_ cell proliferation assays based on nucleoside analogue pulse alone or in combination with other nuclear markers. Our assay has been deplyed to be imaged using the high content microscope IN Cell Analyzer 2000 (GE Healthcare), so the script takes as imput datasets acquired using this and other IN Cell Analyzer versions. It consists of an ImageJ macroinstruction which can be easily added and kept to date using the Fiji distribution of ImageJ, as explained above. The workflow segments the individual nuclei, determines the nucleoside analogue absence/presence, and measures the signal of up to two additional nuclear markers. Therefore, the assay must include at least two channels per field-of-view. On one hand, the counterstain channel to segment the nuclei. On the other hand, the nucleoside analogue channel to measure the signal of each nucleus.
+
+Please note that the workflow do not include an image illumination correction step, so it is advisable to perform it as a pre-processing step. In the **Usage** section of this README you will find useful information to this aim.
+
+In order to assess the output of the assay it is advisable to use a different software suited to explore high content microscopy data, such as [shinyHTM](https://github.com/embl-cba/shinyHTM/blob/master/README.md#shinyhtm).
+
+**Please note that Cell Proliferation is based on a publication:**
+
+* Carrillo-Barberà P., Morante-Redolat J.M., Pertusa J.F. (2019) "[Cell Proliferation High-Content Screening on Adherent Cell Cultures](https://doi.org/10.1007/978-1-4939-9686-5_14)". In: Rebollo E., Bosch M. (eds) Computer Optimized Microscopy. Methods in Molecular Biology, vol 2040. Humana, New York, NY. DOI: https://doi.org/10.1007/978-1-4939-9686-5_14
 
 ## Requirements
 
 * [Fiji](https://fiji.sc/)
+* _Morphology_ update site (Fiji)
 * Image dataset following an IN Cell Analyzer file naming convention (note that the NeuroMol update site includes a [macroinstruction](https://github.com/paucabar/other_macros) to turn data acquired with diferent high content microscopes into an IN Cell Analyzer file naming convention dataset)
 
 ## Installation
@@ -31,7 +43,7 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1jwnG
 
 ### Illumination correction (recommended)
 
-soon
+_soon..._
 
 ### Pre-analysis mode
 
@@ -42,20 +54,20 @@ soon
 5. Ok
 6. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
 7. Ok
-8. Select an image (well and field-of-view) to test the parameters
+8. Select the number of random images that you want to test per well
 9. Check the output (_see Figure 1_)
-10. **Pre-analysis mode** will ask to test a new image, and will continue until the user asks to stop
+10. Note that **Pre-analysis mode (visualization)** allows to rapidly display the images generated by means of a previous pre-analysis
 
 ![image](https://user-images.githubusercontent.com/39589980/79926791-18f88380-843e-11ea-9373-e8acf37ecfe1.png)
 
-**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack composed of two images. On one hand, the merge of the counterstain (blue) and the cell tracker (red) (**left**). On the other hand, the merge of the counterstain (gray), the additionally segmented monolayer (green) and the remaining background (blue) (**right**). Finally, when detected, ROI Manager will store the ROI set of tracker-labeled cells, shown as a yellow, numbered outline (**left**)
+**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack composed of images. Each image shows the merge of the counterstain (blue) and the nucleoside analogue (red) channels. Additionally, outlines represent the segmentation output of nuclei (cyan) and nucleoside analogue (orange).
 
 ### Analysis mode
 
 1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
 2. Select the directory containing the images (.tif files)
 3. Check **Load project** to use a pre-stablished parameter dataset
-4. Check **Save ROIs** to store the regions of interest of the counted cells
+4. Check **Save ROIs** to store the regions of interest of the segmented nuclei
 5. Ok
 6. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
 7. Run
