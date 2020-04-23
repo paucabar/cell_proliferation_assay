@@ -31,15 +31,11 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1jwnG
 
 ### Illumination correction (recommended)
 
-1. Run the **Post-Acquisition Binning** [macro](https://github.com/paucabar/other_macros) (<code>Plugins > NeuroMol Lab > other macros > Post-Acquisition Binning</code>)
-2. Select the directory containing the images (.tif files)
-3. Select the _binning_ mode (2x2, 4x4)
-4. Run
-5. Downsized images will be saved in a new subfolder within the original directory
+soon
 
 ### Pre-analysis mode
 
-1. Run the **Cell Adhesion** macro (<code>Plugins > NeuroMol Lab > Cell Adhesion > Cell Adhesion</code>)
+1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
 2. Select the directory containing the images (.tif files)
 3. Check **Load project** to use a pre-stablished parameter dataset
 4. Ignore the **Save ROIs** option
@@ -50,13 +46,13 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1jwnG
 9. Check the output (_see Figure 1_)
 10. **Pre-analysis mode** will ask to test a new image, and will continue until the user asks to stop
 
-![image](https://user-images.githubusercontent.com/39589980/79636550-c8043900-8178-11ea-9485-97235f933ec0.png)
+![image](https://user-images.githubusercontent.com/39589980/79926791-18f88380-843e-11ea-9373-e8acf37ecfe1.png)
 
 **Figure 1.** _Pre-analysis mode_ output. The macro generates a stack composed of two images. On one hand, the merge of the counterstain (blue) and the cell tracker (red) (**left**). On the other hand, the merge of the counterstain (gray), the additionally segmented monolayer (green) and the remaining background (blue) (**right**). Finally, when detected, ROI Manager will store the ROI set of tracker-labeled cells, shown as a yellow, numbered outline (**left**)
 
 ### Analysis mode
 
-1. Run the **Cell Adhesion** macro (<code>Plugins > NeuroMol Lab > Cell Adhesion</code>)
+1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
 2. Select the directory containing the images (.tif files)
 3. Check **Load project** to use a pre-stablished parameter dataset
 4. Check **Save ROIs** to store the regions of interest of the counted cells
