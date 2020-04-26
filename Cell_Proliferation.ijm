@@ -13,8 +13,9 @@
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
-#@ String (label="<html>Save ROIs:</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") saveROIs
-#@ String (label="<html>Load llumination<br>correction refe-<br>rence image?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
+#@ String (label="<html>Load pre-established<br>parameter dataset?</html>", choices={"No", "Yes"}, persist=true, style="radioButtonHorizontal") importPD
+#@ String (label="<html>Load llumination<br>correction reference<br>image?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
+#@ String (label="<html>Save ROIs?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") saveROIs
 #@ String (label=" ", value="<html><img src=\"https://live.staticflickr.com/65535/48557333566_d2a51be746_o.png\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
 
@@ -107,48 +108,13 @@ for (i=0; i<channels.length; i++) {
 //create a channel array without the 'Empty' option
 channelsSlice=Array.slice(channels, 0, channels.length-1);
 
-
-//‘Pre-Analysis (parameter tweaking)’ and ‘Analysis’ parameterization
-//browse a parameter dataset file (optional) & define output folder and dataset file names
-dirName="Output - " + File.getName(dir);
-resultsName="ResultsTable - " + File.getName(dir);
-radioButtonItems=newArray("Yes", "No");
-//‘Input & Output’ dialog box
-Dialog.create("Input & Output");
-Dialog.addRadioButtonGroup("Browse a pre-established parameter dataset:", radioButtonItems, 1, 2, "No");
-Dialog.addMessage("Output folder:");
-Dialog.addString("", dirName, 40);
-Dialog.addMessage("Output parameter dataset file (txt):");
-Dialog.addString("", "parameter_dataset", 40);
-if(mode=="Analysis") {
-	Dialog.addMessage("Results table:");
-	Dialog.addString("", resultsName, 40);
-}
-html = "<html>"
-	+"Having generated a <b><font color=black>parameter dataset</font></b> txt file using the<br>"
-	+"<b><font color=red>Pre-Analysis (parameter tweaking)</font></b> mode it is possible to<br>"
-	+"browse the file to apply the pre-established parameters<br>"
-	+"<br>"
-	+"Check "
-	+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
-	+" for help";
-Dialog.addHelp(html);
-Dialog.show()
-browseDataset=Dialog.getRadioButton();
-outputFolder=Dialog.getString();
-datasetFile=Dialog.getString();
-if(mode=="Analysis") {
-	resultsTableName=Dialog.getString();
-}
-
 //set some parameter menu arrays
-enhanceContrastOptions=newArray("0", "0.1", "0.2", "0.3", "0.4", "None");
 threshold=getList("threshold.methods");
 pattern=newArray(4);
 
 //Extract values from a parameter dataset file
-if(browseDataset=="Yes") {
-	parametersDatasetPath=File.openDialog("Choose the parameter dataset file to Open:");
+if(importPD=="Yes") {
+	parametersDatasetPath=File.openDialog("Choose the parameter dataset file:");
 	//parameter selection (pre-established)
 	parametersString=File.openAsString(parametersDatasetPath);
 	parameterRows=split(parametersString, "\n");
@@ -157,58 +123,41 @@ if(browseDataset=="Yes") {
 		parameterColumns=split(parameterRows[i],"\t"); 
 		parameters[i]=parameterColumns[1];
 	}
-	pattern[0]=parameters[0];
-	pattern[1]=parameters[1];
-	pattern[2]=parameters[2];
-	pattern[3]=parameters[3];
-	rollingNuclei=parameters[4];
-	enhanceNuclei=parameters[5];
-	gaussianNuclei=parameters[6];
-	thresholdNuclei=parameters[7];
-	erodeNuclei=parameters[8];
-	openNuclei=parameters[9];
-	watershedNuclei=parameters[10];
-	rollingNucleoside=parameters[11];
-	enhanceNucleoside=parameters[12];
-	gaussianNucleoside=parameters[13];
-	thresholdNucleoside=parameters[14];
-	erodeNucleoside=parameters[15];
-	openNucleoside=parameters[16];
-	watershedNucleoside=parameters[17];
-	minNuclei=parameters[18];
-	maxNuclei=parameters[19];
-	minNucleoside=parameters[20];
-	maxNucleoside=parameters[21];
+	projectName=parameters[0];
+	pattern[0]=parameters[1];
+	pattern[1]=parameters[2];
+	pattern[2]=parameters[3];
+	pattern[3]=parameters[4];
+	rollingNuclei=parameters[5];
+	normalize=parameters[6];
+	gaussianNuclei=parameters[7];
+	thresholdNuclei=parameters[8];
+	erodeNuclei=parameters[9];
+	openNuclei=parameters[10];
+	watershedNuclei=parameters[11];
+	size=parameters[12];
 } else {
 	//default parameters
+	projectName="Project";
 	pattern[0]=channelsSlice[0];
 	pattern[1]=channelsSlice[0];
 	pattern[2]=channels[imagesxfield];
 	pattern[3]=channels[imagesxfield];
 	rollingNuclei=50;
-	enhanceNuclei=enhanceContrastOptions[4];
+	normalize=true;
 	gaussianNuclei=2;
 	thresholdNuclei=threshold[6];
 	erodeNuclei=2;
 	openNuclei=2;
 	watershedNuclei=true;
-	rollingNucleoside=50;
-	enhanceNucleoside=enhanceContrastOptions[1];
-	gaussianNucleoside=5;
-	thresholdNucleoside=threshold[6];
-	erodeNucleoside=2;
-	openNucleoside=2;
-	watershedNucleoside=true;
-	minNuclei=20;
-	maxNuclei=300;
-	minNucleoside=0;
-	maxNucleoside=300;
+	size="0-Infinity";
 }
 
 //'Select Parameters' dialog box
 //edit parameters
 title = "Select Parameters";
 Dialog.create(title);
+Dialog.addString("Project", projectName, 40);
 Dialog.setInsets(0, 170, 0);
 Dialog.addMessage("CHANNEL SELECTION:");
 Dialog.addChoice("Nuclei", channelsSlice, pattern[0]);
@@ -218,10 +167,10 @@ Dialog.addChoice("Marker_1", channels, pattern[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels, pattern[3]);
 Dialog.setInsets(0, 170, 0);
-Dialog.addMessage("NUCLEI WORKFLOW:");
+Dialog.addMessage("SEGMENTATION:");
 Dialog.addNumber("Subtract Background (rolling)", rollingNuclei);
 Dialog.addToSameRow();
-Dialog.addChoice("Enhance Contrast", enhanceContrastOptions, enhanceNuclei);
+Dialog.addCheckbox("Normalize", normalize);
 Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
 Dialog.addToSameRow();
 Dialog.addChoice("setAutoThreshold", threshold, thresholdNuclei);
@@ -230,53 +179,27 @@ Dialog.addToSameRow();
 Dialog.addNumber("Open (iterations)", openNuclei);
 Dialog.setInsets(0, 174, 0);
 Dialog.addCheckbox("Watershed", watershedNuclei);
-Dialog.addNumber("Size (min)", minNuclei);
-Dialog.addToSameRow();
-Dialog.addNumber("Size (max)", maxNuclei);
+Dialog.addString("Size", size);
 Dialog.setInsets(0, 170, 0);
-Dialog.addMessage("NUCLEOSIDE ANALOGUE WORKFLOW:");
-Dialog.addNumber("Subtract Background (rolling)", rollingNucleoside);
-Dialog.addToSameRow();
-Dialog.addChoice("Enhance Contrast", enhanceContrastOptions, enhanceNucleoside);
-Dialog.addNumber("Gaussian Blur (sigma)", gaussianNucleoside);
-Dialog.addToSameRow();
-Dialog.addChoice("setAutoThreshold", threshold, thresholdNucleoside);
-Dialog.addNumber("Erode (iterations)", erodeNucleoside);
-Dialog.addToSameRow();
-Dialog.addNumber("Open (iterations)", openNucleoside);
-Dialog.setInsets(0, 174, 0);
-Dialog.addCheckbox("Watershed", watershedNucleoside);
-Dialog.addNumber("Size (min)", minNucleoside);
-Dialog.addToSameRow();
-Dialog.addNumber("Size (max)", maxNucleoside);
 html = "<html>"
 	+"Check "
 	+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
 	+" for help";
 Dialog.addHelp(html);
 Dialog.show()
+projectName=Dialog.getString();
 pattern[0]=Dialog.getChoice();
 pattern[1]=Dialog.getChoice();
 pattern[2]=Dialog.getChoice();
 pattern[3]=Dialog.getChoice();
 rollingNuclei=Dialog.getNumber();
-enhanceNuclei=Dialog.getChoice();
+normalize=Dialog.getCheckbox();
 gaussianNuclei=Dialog.getNumber();
 thresholdNuclei=Dialog.getChoice();
 erodeNuclei=Dialog.getNumber();
 openNuclei=Dialog.getNumber();
 watershedNuclei=Dialog.getCheckbox();
-minNuclei=Dialog.getNumber();
-maxNuclei=Dialog.getNumber();
-rollingNucleoside=Dialog.getNumber();
-enhanceNucleoside=Dialog.getChoice();
-gaussianNucleoside=Dialog.getNumber();
-thresholdNucleoside=Dialog.getChoice();
-erodeNucleoside=Dialog.getNumber();
-openNucleoside=Dialog.getNumber();
-watershedNucleoside=Dialog.getCheckbox();
-minNucleoside=Dialog.getNumber();
-maxNucleoside=Dialog.getNumber();
+size=Dialog.getString();
 
 //check the channel selection
 if(pattern[0]==pattern[1]) {
@@ -293,40 +216,27 @@ if(pattern[0]==pattern[1]) {
 	exit("Addititional marker ["+pattern[2]+"]/["+pattern[3]+"] channels can not be the same")
 }
 
-//Create an output folder
-outputFolderPath=dir+"\\"+outputFolder;
-File.makeDirectory(outputFolderPath);
-
 //Create a parameter dataset file
 title1 = "Parameter dataset";
 title2 = "["+title1+"]";
 f = title2;
 run("Table...", "name="+title2+" width=500 height=500");
+print(f, "Project\t" + projectName);
 print(f, "Nuclei\t" + pattern[0]);
 print(f, "Nucleoside analogue\t" + pattern[1]);
 print(f, "Marker1\t" + pattern[2]);
 print(f, "Marker2\t" + pattern[3]);
 print(f, "Rolling (nuclei)\t" + rollingNuclei);
-print(f, "Enhance (nuclei)\t" + enhanceNuclei);
+print(f, "Enhance (nuclei)\t" + normalize);
 print(f, "Gaussian (nuclei)\t" + gaussianNuclei);
 print(f, "Threshold (nuclei)\t" + thresholdNuclei);
 print(f, "Erode (nuclei)\t" + erodeNuclei);
 print(f, "Open (nuclei)\t" + openNuclei);
 print(f, "Watershed (nuclei)\t" + watershedNuclei);
-print(f, "Rolling (nucleoside)\t" + rollingNucleoside);
-print(f, "Enhance (nucleoside)\t" + enhanceNucleoside);
-print(f, "Gaussian (nucleoside)\t" + gaussianNucleoside);
-print(f, "Threshold (nucleoside)\t" + thresholdNucleoside);
-print(f, "Erode (nucleoside)\t" + erodeNucleoside);
-print(f, "Open (nucleoside)\t" + openNucleoside);
-print(f, "Watershed (nucleoside)\t" + watershedNucleoside);
-print(f, "Size-Min (nuclei)\t" + minNuclei);
-print(f, "Size-Max (nuclei)\t" + maxNuclei);
-print(f, "Size-Min (nucleoside)\t" + minNucleoside);
-print(f, "Size-Max (nucleoside)\t" + maxNucleoside);
+print(f, "Size\t" + size);
 
 //save as TXT
-saveAs("txt", outputFolderPath+"\\"+datasetFile);
+saveAs("txt", dir+File.separator+projectName);
 selectWindow(title1);
 run("Close");
 
@@ -336,12 +246,13 @@ for (i=0; i<nWells; i++) {
 }
 
 //'Well Selection' dialog box
+selectionOptions=newArray("Select All", "Include", "Exclude");
 fileCheckbox=newArray(nWells);
 selection=newArray(nWells);
 title = "Select Wells";
 Dialog.create(title);
-Dialog.addCheckbox("Select All", true);
-Dialog.addCheckboxGroup(8, 12, wellName, selection);
+Dialog.addRadioButtonGroup("", selectionOptions, 3, 1, selectionOptions[0]);
+Dialog.addCheckboxGroup(sqrt(nWells) + 1, sqrt(nWells) + 1, wellName, selection);		
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	if(fieldsxwell>=10) {
 		maxRandomFields=10;
@@ -352,15 +263,22 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	Dialog.addSlider("", 1, maxRandomFields, maxRandomFields);
 }
 Dialog.show();
-selectAll=Dialog.getCheckbox();
-for (i=0; i<nWells; i++) {
-	fileCheckbox[i]=Dialog.getCheckbox();
-	if (selectAll==true) {
-		fileCheckbox[i]=true;
-	}
-}
+selectionMode=Dialog.getRadioButton();
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	maxRandomFields=Dialog.getNumber();
+}
+
+for (i=0; i<wellName.length; i++) {
+	fileCheckbox[i]=Dialog.getCheckbox();
+	if (selectionMode=="Select All") {
+		fileCheckbox[i]=true;
+	} else if (selectionMode=="Exclude") {
+		if (fileCheckbox[i]==true) {
+			fileCheckbox[i]=false;
+		} else {
+			fileCheckbox[i]=true;
+		}
+	}
 }
 
 //check that at least one well have been selected
@@ -371,15 +289,9 @@ for (i=0; i<nWells; i++) {
 
 if (checkSelection == 0) {
 	exit("There is no well selected");
-}
+}
 
-setOption("BlackBackground", false);
-
-
-
-
-
-//Pre-Analysis workflow
+// PRE-ANALYSIS WORKFLOW
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	print("Initializing 'Pre-Analysis' mode");
 	setBatchMode(true);
