@@ -111,6 +111,17 @@ channelsSlice=Array.slice(channels, 0, channels.length-1);
 //set some parameter menu arrays
 threshold=getList("threshold.methods");
 pattern=newArray(4);
+flat_field=newArray(4);
+
+//create a flat-field array with a 'None' option
+if(illumCorr=="Yes") {
+	illumCorrPath=getDirectory("Choose the folder containing the flat-field images");
+	illumCorrList=getFileList(illumCorrPath);
+	concatNone=newArray("None");
+	illumCorrList=Array.concat(concatNone,illumCorrList);
+} else {
+	illumCorrList=newArray("None");
+}
 
 //Extract values from a parameter dataset file
 if(importPD=="Yes") {
@@ -136,6 +147,10 @@ if(importPD=="Yes") {
 	openNuclei=parameters[10];
 	watershedNuclei=parameters[11];
 	size=parameters[12];
+	flat_field[0]=parameters[13];
+	flat_field[1]=parameters[14];
+	flat_field[2]=parameters[15];
+	flat_field[3]=parameters[16];
 } else {
 	//default parameters
 	projectName="Project";
@@ -151,6 +166,10 @@ if(importPD=="Yes") {
 	openNuclei=2;
 	watershedNuclei=true;
 	size="0-Infinity";
+	flat_field[0]="None";
+	flat_field[1]="None";
+	flat_field[2]="None";
+	flat_field[3]="None";
 }
 
 //'Select Parameters' dialog box
@@ -177,10 +196,18 @@ Dialog.addChoice("setAutoThreshold", threshold, thresholdNuclei);
 Dialog.addNumber("Erode (iterations)", erodeNuclei);
 Dialog.addToSameRow();
 Dialog.addNumber("Open (iterations)", openNuclei);
-Dialog.setInsets(0, 174, 0);
+Dialog.setInsets(0, 170, 0);
 Dialog.addCheckbox("Watershed", watershedNuclei);
 Dialog.addString("Size", size);
 Dialog.setInsets(0, 170, 0);
+Dialog.addMessage("ILLUMINATION CORRECTION IMAGES:");
+Dialog.addChoice("Nuclei", illumCorrList, flat_field[0]);
+Dialog.addToSameRow();
+Dialog.addChoice("Nucleoside analogue", illumCorrList, flat_field[1]);
+Dialog.addChoice("Marker_1", illumCorrList, flat_field[2]);
+Dialog.addToSameRow();
+Dialog.addChoice("Marker_2", illumCorrList, flat_field[3]);
+
 html = "<html>"
 	+"Check "
 	+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
@@ -200,6 +227,10 @@ erodeNuclei=Dialog.getNumber();
 openNuclei=Dialog.getNumber();
 watershedNuclei=Dialog.getCheckbox();
 size=Dialog.getString();
+flat_field[0]=Dialog.getChoice();
+flat_field[1]=Dialog.getChoice();
+flat_field[2]=Dialog.getChoice();
+flat_field[3]=Dialog.getChoice();
 
 //check the channel selection
 if(pattern[0]==pattern[1]) {
@@ -234,6 +265,10 @@ print(f, "Erode (nuclei)\t" + erodeNuclei);
 print(f, "Open (nuclei)\t" + openNuclei);
 print(f, "Watershed (nuclei)\t" + watershedNuclei);
 print(f, "Size\t" + size);
+print(f, "Flat-field (nuclei)\t" + flat_field[0]);
+print(f, "Flat-field (nucleoside analogue)\t" + flat_field[1]);
+print(f, "Flat-field (marker1)\t" + flat_field[2]);
+print(f, "Flat-field (marker2)\t" + flat_field[3]);
 
 //save as TXT
 saveAs("txt", dir+File.separator+projectName);
