@@ -1,21 +1,7 @@
 #@ String (label="Size", value="0-Infinity", persist=true) size
 #@ String (label="Exclude edges", choices={"Yes", "No"}, style="radioButtonHorizontal", persist=true) exclude
 
-errorMessage="Size must contain 2 numbers separated by a hyphen (e.g., 20-85)."
-			+"\nThe maximum size can also be 'Infinity' (e.g., 0-Infinity).";
-
-hyphenIndex=indexOf(size, "-");
-if (hyphenIndex == -1) {
-	exit(errorMessage);
-}
-minSize=substring(size, 0, hyphenIndex);
-maxSize=substring(size, hyphenIndex + 1);
-minSize=parseInt(minSize);
-maxSize=parseInt(maxSize);
-if (isNaN(minSize) || isNaN(maxSize)) {
-	exit(errorMessage);
-}
-
+size=min_max_size(size);
 setOption("ExpandableArrays", true);
 run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'C - 04(fld 001 wv DAPI - DAPI).tif', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', 'percentileTop':'99.8', 'probThresh':'0.5', 'nmsThresh':'0.4', 'outputType':'ROI Manager', 'nTiles':'1', 'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', 'showProbAndDist':'false'], process=[false]");
 
@@ -41,6 +27,24 @@ for (i=0; i<nROI; i++) {
 		roiManager("select", i);
 		roiManager("draw");
 	}
+}
+
+function min_max_size(string) {
+	errorMessage="Size must contain 2 numbers separated by a hyphen (e.g., 20-85)."
+				+ "\nThe maximum size can also be 'Infinity' (e.g., 0-Infinity).";
+	hyphenIndex=indexOf(string, "-");
+	if (hyphenIndex == -1) {
+		exit(errorMessage);
+	}
+	sizeArray=newArray(2);
+	sizeArray[0]=substring(string, 0, hyphenIndex);
+	sizeArray[1]=substring(string, hyphenIndex + 1);
+	sizeArray[0]=parseInt(sizeArray[0]);
+	sizeArray[1]=parseInt(sizeArray[1]);
+	if (isNaN(sizeArray[0]) || isNaN(sizeArray[1])) {
+		exit(errorMessage);
+	}
+	return sizeArray;
 }
 
 function excludeEdges() {
