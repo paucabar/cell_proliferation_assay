@@ -1,33 +1,35 @@
+#@ File (label="Select a counterstain image", style="file") counterstain
+#@ File (label="Select a nucleoside analogue image", style="file") nucleoside_analogue
 #@ String (label="Size", value="0-Infinity", persist=true) size
 #@ String (label="Exclude edges", choices={"Yes", "No"}, style="radioButtonHorizontal", persist=true) exclude
+#@ String (label="Visualize", choices={"Yes", "No"}, style="radioButtonHorizontal", persist=true) visualize
 
+//get min and max sizes
 size=min_max_size(size);
-setOption("ExpandableArrays", true);
-run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'C - 04(fld 001 wv DAPI - DAPI).tif', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', 'percentileTop':'99.8', 'probThresh':'0.5', 'nmsThresh':'0.4', 'outputType':'ROI Manager', 'nTiles':'1', 'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', 'showProbAndDist':'false'], process=[false]");
 
+//activate expandable arrays
+setOption("ExpandableArrays", true);
+
+//open
+open(counterstain);
+open(nucleoside_analogue);
+counterstain=File.getName(counterstain);
+nucleoside_analogue=File.getName(nucleoside_analogue);
+
+//stardist segmentation
+run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'"+counterstain+"', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', 'percentileTop':'99.8', 'probThresh':'0.5', 'nmsThresh':'0.4', 'outputType':'ROI Manager', 'nTiles':'1', 'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', 'showProbAndDist':'false'], process=[false]");
+
+//exclude edges
 if (exclude == "Yes") {
 	excludeEdges();
 }
 
-run("Merge Channels...", "c1=[C - 04(fld 001 wv Cy3 - Cy3).tif] c3=[C - 04(fld 001 wv DAPI - DAPI).tif] keep");
-run("Set Measurements...", "mean integrated display redirect=[C - 04(fld 001 wv Cy3 - Cy3).tif] decimal=2");
-roiManager("deselect");
-roiManager("measure");
-nROI=roiManager("count");
-roiManager("Set Line Width", 5);
-
-for (i=0; i<nROI; i++) {
-	mean=getResult("Mean", i);
-	if (mean > 500) {
-		setForegroundColor(255, 200, 0);
-		roiManager("select", i);
-		roiManager("draw");
-	} else {
-		setForegroundColor(0, 255, 255);
-		roiManager("select", i);
-		roiManager("draw");
-	}
+//display outlines
+if (visualize == "Yes") {
+	displayOutlines(counterstain, nucleoside_analogue, 500);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function min_max_size(string) {
 	errorMessage="Size must contain 2 numbers separated by a hyphen (e.g., 20-85)."
@@ -70,4 +72,33 @@ function excludeEdges() {
 	roiManager("select", roiEdge);
 	roiManager("delete");
 	run("Clear Results");
+}
+
+function displayOutlines (image1, image2, threshold) {
+	index1=indexOf(image1, "(");
+	index2=indexOf(image1, " wv");
+	well=substring(image1, 0, index1);
+	field=substring(image1, 0, index2);
+	name=well + " " +field;
+	run("Merge Channels...", "c1=["+image2+"] c3=["+image1+"] keep");
+	rename(name);
+	run("Set Measurements...", "mean display redirect=["+image2+"] decimal=2");
+	roiManager("deselect");
+	roiManager("measure");
+	nROI=roiManager("count");
+	roiManager("Set Line Width", 5);
+	
+	for (i=0; i<nROI; i++) {
+		mean=getResult("Mean", i);
+		if (mean > threshold) {
+			setForegroundColor(255, 200, 0);
+			roiManager("select", i);
+			roiManager("draw");
+		} else {
+			setForegroundColor(0, 255, 255);
+			roiManager("select", i);
+			roiManager("draw");
+		}
+	}
+	roiManager("show none");
 }
