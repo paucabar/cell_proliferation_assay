@@ -5,9 +5,11 @@
  * University of Valencia (Valencia, Spain)
  */
 
-//This macro is a high-content screening tool for cell proliferation assays of
-//adherent cell cultures. It is based on nucleoside analogue pulse alone or in
-//combination with up to two additional nuclear markers.
+/*
+ * This macro is a high-throughput screening tool for cell proliferation assays.
+ * It is based on nucleoside analogue pulse alone or in combination with up to
+ * two additional nuclear markers.
+ */
 
 //choose a macro mode and a directory
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
@@ -82,12 +84,26 @@ for (i=0; i<tifArray.length; i++) {
 	}
 }
 
+//create an array containing the well codes
 wellName=newArray(nWells);
 imagesxwell = (tifFiles / nWells);
 imagesxfield = (tifFiles / nFields);
 fieldsxwell = nFields / nWells;
+for (i=0; i<nWells; i++) {
+	wellName[i]=well[i*imagesxwell];
+}
 
-//Extraction of the ‘channel’ information from the images’ filenames
+//create an array containing the field codes
+fieldName=newArray(fieldsxwell);
+for (i=0; i<fieldsxwell; i++) {
+	fieldName[i]=i+1;
+	fieldName[i]=d2s(fieldName[i], 0);
+	while (lengthOf(fieldName[i])<3) {
+		fieldName[i]="0"+fieldName[i];
+	}
+}
+
+//extraction of the ‘channel’ information from the images’ filenames
 //create an array containing the names of the channels
 channels=newArray(imagesxfield+1);
 count=0;
@@ -272,11 +288,6 @@ saveAs("txt", dir+File.separator+projectName);
 selectWindow(title1);
 run("Close");
 
-//create an array containing the well codes
-for (i=0; i<nWells; i++) {
-	wellName[i]=well[i*imagesxwell];
-}
-
 //'Well Selection' dialog box
 selectionOptions=newArray("Select All", "Include", "Exclude");
 fileCheckbox=newArray(nWells);
@@ -407,167 +418,33 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 
 // ANALYSIS WORKFLOW
 if(mode=="Analysis") {
-	print("Initializing 'Analysis' mode");
-	wellsToAnalyze=0;
-	for(i=0; i<fileCheckbox.length; i++) {
-		if(fileCheckbox[i]==true) {
-			wellsToAnalyze++;
+	print("Running analysis");
+	setBatchMode(true);
+	total_fields=checkSelection*fieldsxwell;
+	row=newArray;
+	column=newArray;
+	field=newArray;
+	count=0;
+	for (i=0; i<nWells; i++) {
+		if (fileCheckbox[i]) {
+			for (j=0; j<fieldName.length; j++) {
+				print(wellName[i]+" (fld " +fieldName[j] + ") " + count+1+"/"+total_fields);
+				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[0]+ " - "+pattern[0]+").tif";
+				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[1]+ " - "+pattern[01]+").tif";
+				
+				row[count]=substring(wellName[i], 0, 1);
+				column[count]=substring(wellName[i], 4, 6);
+				field[count]=fieldName[j];
+				open(dir+File.separator+counterstain);
+				open(dir+File.separator+nucleoside_analogue);
+				
+				run("Close All");
+				count++;
+			}
 		}
 	}
-	fieldsToAnalyze=fieldsxwell*wellsToAnalyze;
-	setBatchMode(true);
-	count=0;
-	count3=0;
-	firstRound=true;
-	for (z=0; z<nWells; z++) { //nWells FOR statement beginning
-		count2=0;
-		while (count2 < fieldsxwell) { //count2 WHILE  statement beginning
-			if (fileCheckbox[z]==true) { //checkbox IF statement beginning
-				//Open images
-				for (i=0; i<imagesxfield; i++) {
-					open(dir+"\\"+tifArray[count]);
-					count++;
-				}
-				count2++;
-				count3++;
-				wellAndFieldName=wellName[z]+ " fld " +field[count-1];
-				print("\\Clear");
-				print("Analyzing: "+wellAndFieldName+" ("+count3+"/"+fieldsToAnalyze+")");
-				progress=count3/fieldsToAnalyze*100;
-				progressString=d2s(progress, 0);
-				progressBar="|";
-				for (i=2; i<=100; i+=2) {
-					if (progress>=i) {
-						progressBar+="*";
-					} else {
-						progressBar+="-";
-					}
-				}
-				progressBar+="|";
-				print(progressBar, progressString, "%");
-				
-				//Channel images checkpoint
-				if (nImages==imagesxfield) { //nImages IF statement beginning
-					//Channel identification
-					channelIdentification(imagesxfield, pattern);
-
-					//8-bits conversion (nuclei & nucleoside analogue)
-					selectImage(pattern[0]);
-					run("8-bit");
-					selectImage(pattern[1]);
-					run("8-bit");
-
-					//maximaFilter checkpoint
-					aproxN=maximaFilter(pattern[0]);
-					if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
-
-						//Nuclei segmentation
-						segmentation(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei);
-						//Nucleoside analogue segmentation
-						segmentation(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside);
-						rename("Segmented");
-						//Nucleoside analogue size selection
-						run("Analyze Particles...", "size="+minNucleoside+"-"+maxNucleoside+" show=Masks");
-						rename(pattern[1]);
-						close("Segmented");
-		
-						//One by one nuclei analysis
-						//Create a nuclei ‘Count Masks’ image
-						nFeat=createCountMasks(pattern[0], minNuclei, maxNuclei);
-						imageResults=newArray(nFeat);
-						meanResult1=newArray(nFeat);
-						meanResult2=newArray(nFeat);
-						imageDataname=newArray(nFeat);
-						//Single nucleus segmentation
-						for (i=1; i<=nFeat; ++1) { //nucleus by nucleus analysis FOR statement beginning
-							nameNucleous=pattern[0]+"-"+i;
-							nameM1=pattern[1]+"-"+i;
-							//Nucleoside analogue analysis
-							imageResults[i-1]=nucleosideAnalysis(pattern[0], nameNucleous, i, pattern[1], nameM1);
-							//Additional marker 1 analysis
-							meanResult1[i-1]=markerAnalysis(pattern[2], nameNucleous);
-							//Additional marker 2 analysis
-							meanResult2[i-1]=markerAnalysis(pattern[3], nameNucleous);
-							//Close binary images of nucleoside analogue nucleous-by-nucleous loop
-							close(nameM1);
-							close(nameNucleous);
-
-							//Results storage
-							imageDataname[i-1]=wellAndFieldName;
-							if(i==nFeat) {
-								if(firstRound==true) {
-									nucleosideAnalogue=imageResults;
-									marker1=meanResult1;
-									marker2=meanResult2;
-									dataname=imageDataname;
-									firstRound=false;
-								} else {
-									nucleosideAnalogue=Array.concat(nucleosideAnalogue, imageResults);
-									marker1=Array.concat(marker1, meanResult1);
-									marker2=Array.concat(marker2, meanResult2);
-									dataname=Array.concat(dataname, imageDataname);
-								}
-								
-							}
-						} //nucleus by nucleus analysis FOR statement ending
-						cleanUp();
-					
-					} else { //maxima filter ELSE statement
-						beep();
-						cleanUp();
-					} //maxima filter IF-ELSE statement ending
-					cleanUp();
-				} else { //nImages ELSE statement
-					beep();
-					cleanUp();
-				} //nImages IF-ELSE statement ending
-			} else { //checkbox ELSE statement
-				count += imagesxwell;
-				count2 = fieldsxwell;
-			} //checkbox IF-ELSE statement ending
-		} //count2 WHILE  statement ending
-	} //nWells FOR statement ending
-	
 	setBatchMode(false);
-	
-	//results table
-	resultsTable("Results table", pattern[2], pattern[3], dataname, nucleosideAnalogue, marker1, marker2);
-	//save as TXT
-	saveAs("txt", outputFolderPath+"\\"+resultsTableName);
-	selectWindow("Results table");
-	run("Close");
-	// From ImageJ website (macro examples GetDateAndTime.txt)
-	// This macro demonstrates how to use the getDateAndTime() 
-	// function, available in ImageJ 1.34n or later.
-	MonthNames = newArray("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
-	DayNames = newArray("Sun", "Mon","Tue","Wed","Thu","Fri","Sat");
-	getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
-	TimeString ="Date: "+DayNames[dayOfWeek]+" ";
-	if (dayOfMonth<10) {TimeString = TimeString+"0";}
-	TimeString = TimeString+dayOfMonth+"-"+MonthNames[month]+"-"+year+"\nTime: ";
-	if (hour<10) {TimeString = TimeString+"0";}
-	TimeString = TimeString+hour+":";
-	if (minute<10) {TimeString = TimeString+"0";}
-	TimeString = TimeString+minute+":";
-	if (second<10) {TimeString = TimeString+"0";}
-	TimeString = TimeString+second;
-	title1 = "Info";
-	title2 = "["+title1+"]";
-	fInfo = title2;
-	run("Table...", "name="+title2+" width=500 height=500");
-	print(fInfo, "ImageJ "+getVersion());
-	print(fInfo, TimeString);
-	saveAs("txt", outputFolderPath+"\\Info");
-	selectWindow("Info");
-	run("Close");
-	print("\\Clear");
-	print("ImageJ "+getVersion());
-	print(TimeString);
-	print("");
-	print("End of process");
-	print("Find the results table at:");
-	print(outputFolderPath);
-	print("");
+	run("End of process");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
