@@ -327,12 +327,13 @@ if (checkSelection == 0) {
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	print("Initializing 'Pre-Analysis' mode");
 	setBatchMode(true);
-	for (z=0; z<nWells; z++) { //nWells FOR statement beginning
-		if (fileCheckbox[z]==true) { //checkbox IF statement beginning
+	for (z=0; z<nWells; z++) {
+		if (fileCheckbox[z]==true) {
 			randomArray=newArray(maxRandomFields);
 			options=fieldsxwell;
 			count=0;
-			//Random selection of fields
+			
+			// random selection of fields
 			while (count < randomArray.length) {
 				recurrent=false;
 				number=round((options-1)*random);
@@ -342,7 +343,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					}
 				}
 				if(recurrent==false || count==0) {
-					//Open images
+					// open images
 					channels_test=newArray(2);
 					for (i=0; i<imagesxfield; i++) {
 						open(dir+File.separator+tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
@@ -353,8 +354,24 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 							}
 						}
 					}				
+					
 					print("Pre-Analyzing: "+wellName[z]+" ("+count+1+"/"+randomArray.length+")");
-					//nuclei segmentation
+					
+					// illumination correction
+					if (illumCorr == "Yes") {
+						if (flat_field[0] != "None") {
+							open(illumCorrPath+File.separator+flat_field[0]);
+							imageCalculator("Divide", channels_test[0], flat_field[0]);
+							close(flat_field[0]);
+						}
+						if (flat_field[1] != "None") {
+							open(illumCorrPath+File.separator+flat_field[1]);
+							imageCalculator("Divide", channels_test[1], flat_field[1]);
+							close(flat_field[1]);
+						}
+					}
+					
+					// nuclei segmentation
 					selectImage(channels_test[0]);
 					run("Duplicate...", "title=nuclei_mask");
 					if (normalize) {
@@ -370,7 +387,8 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					}
 					run("Set Measurements...", "  redirect=None decimal=2");
 					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");
-					//visualization image
+					
+					// visualization image
 					displayOutlines(channels_test[0], channels_test[1], 500);
 					close("nuclei_mask");
 					close(channels_test[0]);
@@ -380,7 +398,8 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 				}
 			}
 		}
-	} //nWells FOR statement ending
+	}
+	// show as a stack
 	run("Images to Stack", "name=Stack title=[] use");
 	setBatchMode(false);
 	print("End of process");
@@ -597,8 +616,6 @@ function displayOutlines (image1, image2, threshold) {
 			roiManager("draw");
 		}
 	}
-	roiManager("show none");
 	roiManager("reset");
-	run("Select None");
 	run("Clear Results");
 }
