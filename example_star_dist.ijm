@@ -1,6 +1,6 @@
 #@ File (label="Select a counterstain image", style="file") counterstain
 #@ File (label="Select a nucleoside analogue image", style="file") nucleoside_analogue
-#@ String (label="Size", value="0-Infinity", persist=true) size
+#@ String (label="Size", value="0-Infinity", persist=false) size
 #@ String (label="Exclude edges", choices={"Yes", "No"}, style="radioButtonHorizontal", persist=true) exclude
 #@ String (label="Visualize", choices={"Yes", "No"}, style="radioButtonHorizontal", persist=true) visualize
 
@@ -23,6 +23,9 @@ run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['i
 if (exclude == "Yes") {
 	excludeEdges();
 }
+
+//size selection
+sizeSelection(size[0], size[1]);
 
 //display outlines
 if (visualize == "Yes") {
@@ -49,6 +52,27 @@ function min_max_size(string) {
 	return sizeArray;
 }
 
+function sizeSelection(min, max) {
+	roiDiscard=newArray();
+	run("Set Measurements...", "area display redirect=None decimal=2");
+	roiManager("deselect");
+	roiManager("measure");
+	nROI=roiManager("count");
+	discardCount=0;
+	for (i=0; i<nROI; i++) {
+		area=getResult("Area", i);
+		if (area < min || area > max) {
+			roiDiscard[discardCount]=i;
+			discardCount++;
+		}
+	}
+	if (discardCount != 0) {
+		roiManager("select", roiDiscard);
+		roiManager("delete");
+		run("Clear Results");
+	}
+}
+
 function excludeEdges() {
 	roiEdge=newArray();
 	run("Set Measurements...", "bounding display redirect=None decimal=2");
@@ -68,10 +92,12 @@ function excludeEdges() {
 			roiEdge[roiEdgeCount]=i;
 			roiEdgeCount++;
 		}
-	}	
-	roiManager("select", roiEdge);
-	roiManager("delete");
-	run("Clear Results");
+	}
+	if (roiEdgeCount != 0) {
+		roiManager("select", roiEdge);
+		roiManager("delete");
+		run("Clear Results");
+	}
 }
 
 function displayOutlines (image1, image2, threshold) {
@@ -101,4 +127,5 @@ function displayOutlines (image1, image2, threshold) {
 		}
 	}
 	roiManager("show none");
+	run("Clear Results");
 }
