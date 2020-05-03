@@ -139,18 +139,17 @@ if(importPD=="Yes") {
 	pattern[1]=parameters[2];
 	pattern[2]=parameters[3];
 	pattern[3]=parameters[4];
-	rollingNuclei=parameters[5];
-	normalize=parameters[6];
-	gaussianNuclei=parameters[7];
-	thresholdNuclei=parameters[8];
-	erodeNuclei=parameters[9];
-	openNuclei=parameters[10];
-	watershedNuclei=parameters[11];
-	size=parameters[12];
-	flat_field[0]=parameters[13];
-	flat_field[1]=parameters[14];
-	flat_field[2]=parameters[15];
-	flat_field[3]=parameters[16];
+	normalize=parameters[5];
+	gaussianNuclei=parameters[6];
+	thresholdNuclei=parameters[7];
+	erodeNuclei=parameters[8];
+	openNuclei=parameters[9];
+	watershedNuclei=parameters[10];
+	size=parameters[11];
+	flat_field[0]=parameters[12];
+	flat_field[1]=parameters[13];
+	flat_field[2]=parameters[14];
+	flat_field[3]=parameters[15];
 } else {
 	//default parameters
 	projectName="Project";
@@ -158,7 +157,6 @@ if(importPD=="Yes") {
 	pattern[1]=channelsSlice[0];
 	pattern[2]=channels[imagesxfield];
 	pattern[3]=channels[imagesxfield];
-	rollingNuclei=50;
 	normalize=true;
 	gaussianNuclei=2;
 	thresholdNuclei=threshold[6];
@@ -187,8 +185,6 @@ Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels, pattern[3]);
 Dialog.setInsets(0, 170, 0);
 Dialog.addMessage("SEGMENTATION:");
-Dialog.addNumber("Subtract Background (rolling)", rollingNuclei);
-Dialog.addToSameRow();
 Dialog.addCheckbox("Normalize", normalize);
 Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
 Dialog.addToSameRow();
@@ -219,7 +215,6 @@ pattern[0]=Dialog.getChoice();
 pattern[1]=Dialog.getChoice();
 pattern[2]=Dialog.getChoice();
 pattern[3]=Dialog.getChoice();
-rollingNuclei=Dialog.getNumber();
 normalize=Dialog.getCheckbox();
 gaussianNuclei=Dialog.getNumber();
 thresholdNuclei=Dialog.getChoice();
@@ -247,6 +242,9 @@ if(pattern[0]==pattern[1]) {
 	exit("Addititional marker ["+pattern[2]+"]/["+pattern[3]+"] channels can not be the same")
 }
 
+//get min and max sizes
+size=min_max_size(size);
+
 //Create a parameter dataset file
 title1 = "Parameter dataset";
 title2 = "["+title1+"]";
@@ -257,14 +255,13 @@ print(f, "Nuclei\t" + pattern[0]);
 print(f, "Nucleoside analogue\t" + pattern[1]);
 print(f, "Marker1\t" + pattern[2]);
 print(f, "Marker2\t" + pattern[3]);
-print(f, "Rolling (nuclei)\t" + rollingNuclei);
 print(f, "Enhance (nuclei)\t" + normalize);
 print(f, "Gaussian (nuclei)\t" + gaussianNuclei);
 print(f, "Threshold (nuclei)\t" + thresholdNuclei);
 print(f, "Erode (nuclei)\t" + erodeNuclei);
 print(f, "Open (nuclei)\t" + openNuclei);
 print(f, "Watershed (nuclei)\t" + watershedNuclei);
-print(f, "Size\t" + size);
+print(f, "Size\t" + size[0]+"-"+size[1]);
 print(f, "Flat-field (nuclei)\t" + flat_field[0]);
 print(f, "Flat-field (nucleoside analogue)\t" + flat_field[1]);
 print(f, "Flat-field (marker1)\t" + flat_field[2]);
@@ -346,64 +343,50 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 				}
 				if(recurrent==false || count==0) {
 					//Open images
+					channels_test=newArray(2);
 					for (i=0; i<imagesxfield; i++) {
-						open(dir+"\\"+tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
-					}
-					
+						open(dir+File.separator+tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
+						field_channel=getTitle();
+						for (j=0; j<channels_test.length; j++) {
+							if (indexOf(field_channel, pattern[j]) != -1) {
+								channels_test[j]=field_channel;
+							}
+						}
+					}				
 					print("Pre-Analyzing: "+wellName[z]+" ("+count+1+"/"+randomArray.length+")");
-
-					//Channel images checkpoint
-					if (nImages==imagesxfield) { //nImages IF statement beginning
-						//Channel identification
-						channelIdentification(imagesxfield, pattern);
-	
-						//8-bits conversion (nuclei & nucleoside analogue)
-						selectImage(pattern[0]);
-						run("8-bit");
-						selectImage(pattern[1]);
-						run("8-bit");
-	
-						//maximaFilter checkpoint
-						aproxN=maximaFilter(pattern[0]);
-						if (aproxN>10 && aproxN<=255) { //maxima filter IF statement beginning
-							//Merge channels
-							run("Merge Channels...", "c1="+pattern[1]+" c3="+pattern[0]+" create keep");
-							run("Stack to RGB");
-							rename("RGB");
-							//Draw the outlines of the nuclei and nucleoside analogue binary masks
-							//Nuclei segmentation
-							segmentationPreAnalysis(pattern[0], rollingNuclei, enhanceNuclei, gaussianNuclei, thresholdNuclei, erodeNuclei, openNuclei, watershedNuclei, "RGB", minNuclei, maxNuclei, 0, 255, 255);
-							//Nucleoside analogue segmentation
-							segmentationPreAnalysis(pattern[1], rollingNucleoside, enhanceNucleoside, gaussianNucleoside, thresholdNucleoside, erodeNucleoside, openNucleoside, watershedNucleoside, "RGB", minNucleoside, maxNucleoside, 255, 105, 0);							
-							//Save the image
-							saveAs("tif", outputFolderPath+"\\"+wellName[z]+" fld "+field[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)]);
-							//Clean up
-							cleanUp();
-							randomArray[count]=number;
-							count++;
-						} else { //maxima filter ELSE statement
-							beep();
-							cleanUp();
-						} //maxima filter IF-ELSE statement ending
-						cleanUp();
-					} else { //nImages ELSE statement
-						beep();
-						cleanUp();
-					} //nImages IF-ELSE statement ending
+					//nuclei segmentation
+					selectImage(channels_test[0]);
+					run("Duplicate...", "title=nuclei_mask");
+					if (normalize) {
+						run("Enhance Contrast...", "saturated=0.1 normalize");
+					}
+					run("Gaussian Blur...", "sigma="+gaussianNuclei);
+					setAutoThreshold(thresholdNuclei+" dark");
+					run("Make Binary");
+					run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
+					run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
+					if (watershedNuclei) {
+						run("Watershed");
+					}
+					run("Set Measurements...", "  redirect=None decimal=2");
+					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");
+					//visualization image
+					displayOutlines(channels_test[0], channels_test[1], 500);
+					close("nuclei_mask");
+					close(channels_test[0]);
+					close(channels_test[1]);
+					randomArray[count]=number;
+					count++;
 				}
 			}
 		}
 	} //nWells FOR statement ending
-	
+	run("Images to Stack", "name=Stack title=[] use");
 	setBatchMode(false);
 	print("End of process");
-	print("Find the output at:");
-	print(outputFolderPath);
-	//Visualization
-	setVisualization(outputFolderPath);
 }
 
-//Analysis workflow
+// ANALYSIS WORKFLOW
 if(mode=="Analysis") {
 	print("Initializing 'Analysis' mode");
 	wellsToAnalyze=0;
@@ -566,4 +549,56 @@ if(mode=="Analysis") {
 	print("Find the results table at:");
 	print(outputFolderPath);
 	print("");
-}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function min_max_size(string) {
+	errorMessage="Size must contain 2 numbers separated by a hyphen (e.g., 20-85)."
+				+ "\nThe maximum size can also be 'Infinity' (e.g., 0-Infinity).";
+	hyphenIndex=indexOf(string, "-");
+	if (hyphenIndex == -1) {
+		exit(errorMessage);
+	}
+	sizeArray=newArray(2);
+	sizeArray[0]=substring(string, 0, hyphenIndex);
+	sizeArray[1]=substring(string, hyphenIndex + 1);
+	sizeArray[0]=parseInt(sizeArray[0]);
+	sizeArray[1]=parseInt(sizeArray[1]);
+	if (isNaN(sizeArray[0]) || isNaN(sizeArray[1])) {
+		exit(errorMessage);
+	}
+	return sizeArray;
+}
+
+function displayOutlines (image1, image2, threshold) {
+	index1=indexOf(image1, "(");
+	index2=indexOf(image1, " wv");
+	well=substring(image1, 0, index1)+ ")";
+	field=substring(image1, index1, index2)+ ")";
+	name=well + " " +field;
+	run("Merge Channels...", "c1=["+image2+"] c3=["+image1+"] keep");
+	rename(name);
+	run("Set Measurements...", "mean display redirect=["+image2+"] decimal=2");
+	roiManager("deselect");
+	roiManager("measure");
+	nROI=roiManager("count");
+	roiManager("Set Line Width", 5);
+	
+	for (i=0; i<nROI; i++) {
+		mean=getResult("Mean", i);
+		if (mean > threshold) {
+			roiManager("select", i);
+			roiManager("Set Color", "orange");
+			roiManager("draw");
+		} else {
+			roiManager("select", i);
+			roiManager("Set Color", "cyan");
+			roiManager("draw");
+		}
+	}
+	roiManager("show none");
+	roiManager("reset");
+	run("Select None");
+	run("Clear Results");
+}
