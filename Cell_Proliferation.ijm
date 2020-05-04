@@ -11,6 +11,8 @@
  * two additional nuclear markers.
  */
 
+macro "Cell_Proliferation" {
+
 //choose a macro mode and a directory
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)"}, style="radioButtonVertical") mode
@@ -420,31 +422,104 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 if(mode=="Analysis") {
 	print("Running analysis");
 	setBatchMode(true);
+
+	// open illumination correction images
+	if (illumCorr == "Yes") {
+		for (i=0; i<flat_field.length; i++) {
+			if (flat_field[i] != "None") {
+				open(illumCorrPath+File.separator+flat_field[i]);
+			}
+		}
+	}
+
+	// define variables
 	total_fields=checkSelection*fieldsxwell;
+	count=0;
 	row=newArray;
 	column=newArray;
 	field=newArray;
-	count=0;
+	
 	for (i=0; i<nWells; i++) {
 		if (fileCheckbox[i]) {
 			for (j=0; j<fieldName.length; j++) {
 				print(wellName[i]+" (fld " +fieldName[j] + ") " + count+1+"/"+total_fields);
 				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[0]+ " - "+pattern[0]+").tif";
-				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[1]+ " - "+pattern[01]+").tif";
-				
+				open(dir+File.separator+counterstain);
+				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[1]+ " - "+pattern[1]+").tif";
+				open(dir+File.separator+nucleoside_analogue);
+				if (pattern[2] != "Empty") {
+					marker1=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[2]+ " - "+pattern[2]+").tif";
+					open(dir+File.separator+marker1);
+					if (pattern[3] != "Empty") {
+						marker2=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[3]+ " - "+pattern[3]+").tif";
+						open(dir+File.separator+marker2);
+					}
+				}
+
+				// illumination correction
+				if (illumCorr == "Yes") {
+					if (flat_field[0] != "None") {
+						imageCalculator("Divide", counterstain, flat_field[0]);
+					}
+					if (flat_field[1] != "None") {
+						imageCalculator("Divide", nucleoside_analogue, flat_field[1]);
+					}
+					if (flat_field[2] != "None" && pattern[2] != "Empty") {
+						imageCalculator("Divide", marker1, flat_field[2]);
+					}
+					if (flat_field[3] != "None" && pattern[3] != "Empty") {
+						imageCalculator("Divide", marker2, flat_field[3]);
+					}
+				}
+
+				// nuclei segmentation
+				selectImage(counterstain);
+				run("Duplicate...", "title=nuclei_mask");
+				if (normalize) {
+					run("Enhance Contrast...", "saturated=0.1 normalize");
+				}
+				run("Gaussian Blur...", "sigma="+gaussianNuclei);
+				setAutoThreshold(thresholdNuclei+" dark");
+				run("Make Binary");
+				run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
+				run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
+				if (watershedNuclei) {
+					run("Watershed");
+				}
+
+				// measure nucleoside analogue intensity and object area and shape descriptors
+				run("Set Measurements...", "area mean shape integrated display redirect=["+nucleoside_analogue+"] decimal=2");
+				run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear add");
+
+				// save ROIs
+				if (saveROIs == "Yes") {
+					roiManager("deselect");
+					roiManager("save", dir+File.separator+wellName[i]+" (fld " +fieldName[j] + ") ROI.zip");
+				}
+				roiManager("reset");
+
+				// store metadata
 				row[count]=substring(wellName[i], 0, 1);
 				column[count]=substring(wellName[i], 4, 6);
 				field[count]=fieldName[j];
-				open(dir+File.separator+counterstain);
-				open(dir+File.separator+nucleoside_analogue);
-				
-				run("Close All");
 				count++;
+
+				// clean up
+				close(counterstain);
+				close(nucleoside_analogue);	
+				close("nuclei_mask");
+				if (pattern[2] != "Empty") {
+					close(marker1);
+					if (pattern[3] != "Empty") {
+						close(marker2);
+					}
+				}
 			}
 		}
 	}
+	close("*");
 	setBatchMode(false);
-	run("End of process");
+	print("End of process");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -495,4 +570,5 @@ function displayOutlines (image1, image2, threshold) {
 	}
 	roiManager("reset");
 	run("Clear Results");
+}
 }
