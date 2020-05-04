@@ -398,14 +398,18 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					if (watershedNuclei) {
 						run("Watershed");
 					}
-					run("Set Measurements...", "  redirect=None decimal=2");
-					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");
-					
+
 					// visualization image
+					run("Set Measurements...", "  redirect=None decimal=2");
+					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");		
 					displayOutlines(channels_test[0], channels_test[1], 500);
+
+					// clean up
 					close("nuclei_mask");
 					close(channels_test[0]);
 					close(channels_test[1]);
+
+					// update loop variables
 					randomArray[count]=number;
 					count++;
 				}
@@ -438,6 +442,24 @@ if(mode=="Analysis") {
 	row=newArray;
 	column=newArray;
 	field=newArray;
+	mean_std_ratio=newArray;
+	satPix=newArray;
+	maxCount=newArray;
+	area=newArray;
+	circularity=newArray;
+	aspect_ratio=newArray;
+	solidity=newArray;
+	roundness==newArray;
+	mean_nucleoside_analogue=newArray;
+	intDen_nucleoside_analogue==newArray;
+	if (pattern[2] != "Empty") {
+		mean_marker1=newArray;
+		intDen_marker1==newArray;
+		if (pattern[3] != "Empty") {
+			mean_marker2=newArray;
+			intDen_marker2==newArray;
+		}
+	}
 	
 	for (i=0; i<nWells; i++) {
 		if (fileCheckbox[i]) {
@@ -490,6 +512,21 @@ if(mode=="Analysis") {
 				// measure nucleoside analogue intensity and object area and shape descriptors
 				run("Set Measurements...", "area mean shape integrated display redirect=["+nucleoside_analogue+"] decimal=2");
 				run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear add");
+				n=nResults;
+				for (k=0; k<n; k++) {
+					area[count]=getResult("Area", k);
+					circularity[count]=getResult("Circ.", k);
+					aspect_ratio[count]=getResult("AR", k);
+					solidity[count]=getResult("Solidity", k);
+					roundness[count]=getResult("Round", k);
+					mean_nucleoside_analogue[count]=getResult("Mean", k);
+					intDen_nucleoside_analogue[count]=getResult("IntDen", k);
+					
+					// store metadata as well
+					row[count]=substring(wellName[i], 0, 1);
+					column[count]=substring(wellName[i], 4, 6);
+					field[count]=fieldName[j];
+				}
 
 				// save ROIs
 				if (saveROIs == "Yes") {
@@ -498,11 +535,22 @@ if(mode=="Analysis") {
 				}
 				roiManager("reset");
 
-				// store metadata
-				row[count]=substring(wellName[i], 0, 1);
-				column[count]=substring(wellName[i], 4, 6);
-				field[count]=fieldName[j];
-				count++;
+				// measure additional markers
+				if (pattern[2] != "Empty") {
+					run("Set Measurements...", "mean integrated display redirect=["+marker1+"] decimal=2");
+					n=nResults;
+					for (k=0; k<n; k++) {
+						mean_marker1[count]=getResult("Mean", k);
+						mean_marker1[count]=getResult("IntDen", k);
+					}
+					if (pattern[3] != "Empty") {
+						run("Set Measurements...", "mean integrated display redirect=["+marker2+"] decimal=2");
+						for (k=0; k<n; k++) {
+							mean_marker2[count]=getResult("Mean", k);
+							mean_marker2[count]=getResult("IntDen", k);
+						}
+					}
+				}
 
 				// clean up
 				close(counterstain);
@@ -514,6 +562,9 @@ if(mode=="Analysis") {
 						close(marker2);
 					}
 				}
+
+				// update count
+				count++;
 			}
 		}
 	}
