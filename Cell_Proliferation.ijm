@@ -477,6 +477,42 @@ if(mode=="Analysis") {
 						open(dir+File.separator+marker2);
 					}
 				}
+				
+				// quality control: blurring
+				selectImage(counterstain);
+				getStatistics(areaImage, meanImage, minImage, maxImage, stdImage, histogramImage);
+				mean_std_ratio[count]=meanImage/stdImage;
+
+				// quality control: % sat pixels
+				selectImage(counterstain);
+				run("Duplicate...", "title=QC_sat");
+				imageBitDepth=bitDepth();
+				if (imageBitDepth != 8) run("8-bit");
+				run("Set Measurements...", "area_fraction display redirect=None decimal=2");
+				setThreshold(255, 255);
+				run("Measure");
+				satPix[count]=getResult("%Area", 0);
+				run("Clear Results");
+				close("QC_sat");
+
+				// quality control: no content
+				selectImage(counterstain);
+				run("Duplicate...", "title=QC_nc1");
+				imageBitDepth=bitDepth();
+				if (imageBitDepth != 8) run("8-bit");
+				run("Gaussian Blur...", "sigma=1");
+				run("Duplicate...", "title=QC_nc2");
+				selectImage("QC_nc1");
+				run("Find Maxima...", "prominence=100 output=Count");
+				maxCount1=getResult("Count", 0);
+				selectImage("QC_nc2");
+				run("Enhance Contrast...", "saturated=0.4 normalize");
+				run("Find Maxima...", "prominence=100 output=Count");
+				maxCount2=getResult("Count", 1);
+				maxCount[count]=maxCount1/maxCount2;
+				run("Clear Results");
+				close("QC_nc1");
+				close("QC_nc2");
 
 				// illumination correction
 				if (illumCorr == "Yes") {
