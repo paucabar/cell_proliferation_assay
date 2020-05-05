@@ -449,15 +449,17 @@ if(mode=="Analysis") {
 	circularity=newArray;
 	aspect_ratio=newArray;
 	solidity=newArray;
-	roundness==newArray;
+	roundness=newArray;
 	mean_nucleoside_analogue=newArray;
-	intDen_nucleoside_analogue==newArray;
+	intDen_nucleoside_analogue=newArray;
 	if (pattern[2] != "Empty") {
 		mean_marker1=newArray;
-		intDen_marker1==newArray;
+		intDen_marker1=newArray;
+		count_m1=0;
 		if (pattern[3] != "Empty") {
 			mean_marker2=newArray;
-			intDen_marker2==newArray;
+			intDen_marker2=newArray;
+			count_m2=0;
 		}
 	}
 	
@@ -481,7 +483,7 @@ if(mode=="Analysis") {
 				// quality control: blurring
 				selectImage(counterstain);
 				getStatistics(areaImage, meanImage, minImage, maxImage, stdImage, histogramImage);
-				mean_std_ratio[count]=meanImage/stdImage;
+				blurring=meanImage/stdImage;
 
 				// quality control: % sat pixels
 				selectImage(counterstain);
@@ -491,7 +493,7 @@ if(mode=="Analysis") {
 				run("Set Measurements...", "area_fraction display redirect=None decimal=2");
 				setThreshold(255, 255);
 				run("Measure");
-				satPix[count]=getResult("%Area", 0);
+				saturated=getResult("%Area", 0);
 				run("Clear Results");
 				close("QC_sat");
 
@@ -509,7 +511,7 @@ if(mode=="Analysis") {
 				run("Enhance Contrast...", "saturated=0.4 normalize");
 				run("Find Maxima...", "prominence=100 output=Count");
 				maxCount2=getResult("Count", 1);
-				maxCount[count]=maxCount1/maxCount2;
+				maxima_ratio=maxCount1/maxCount2;
 				run("Clear Results");
 				close("QC_nc1");
 				close("QC_nc2");
@@ -562,6 +564,12 @@ if(mode=="Analysis") {
 					row[count]=substring(wellName[i], 0, 1);
 					column[count]=substring(wellName[i], 4, 6);
 					field[count]=fieldName[j];
+
+					// store qc measurements
+					mean_std_ratio[count]=blurring;
+					satPix[count]=saturated;
+					maxCount[count]=maxima_ratio;
+					count++;
 				}
 
 				// save ROIs
@@ -576,14 +584,16 @@ if(mode=="Analysis") {
 					run("Set Measurements...", "mean integrated display redirect=["+marker1+"] decimal=2");
 					n=nResults;
 					for (k=0; k<n; k++) {
-						mean_marker1[count]=getResult("Mean", k);
-						mean_marker1[count]=getResult("IntDen", k);
+						mean_marker1[count_m1]=getResult("Mean", k);
+						intDen_marker1[count_m1]=getResult("IntDen", k);
+						count_m1++;
 					}
 					if (pattern[3] != "Empty") {
 						run("Set Measurements...", "mean integrated display redirect=["+marker2+"] decimal=2");
 						for (k=0; k<n; k++) {
-							mean_marker2[count]=getResult("Mean", k);
-							mean_marker2[count]=getResult("IntDen", k);
+							mean_marker2[count_m2]=getResult("Mean", k);
+							intDen_marker2[count_m2]=getResult("IntDen", k);
+							count_m2++;
 						}
 					}
 				}
@@ -598,14 +608,45 @@ if(mode=="Analysis") {
 						close(marker2);
 					}
 				}
-
-				// update count
-				count++;
 			}
 		}
 	}
 	close("*");
 	setBatchMode(false);
+
+	// results table
+	title1 = "Results table";
+	title2 = "["+title1+"]";
+	f = title2;
+	run("Table...", "name="+title2+" width=500 height=500");
+	headings="\\Headings:n\tRow\tColumn\tField\tMean/s.d.\t%SatPix\tMaxCountRatio\tArea\tCirc.\tAR\tSolidity\tRound\tMean-"+pattern[1]+"\tIntDen-"+pattern[1];
+	if (pattern[2] != "Empty") {
+		headings+="\tMean-"+pattern[2]+"\tIntDen-"+pattern[2];
+		if (pattern[3] != "Empty") {
+			headings+="\tMean-"+pattern[3]+"\tIntDen-"+pattern[3];
+		}
+	}
+	print(f, headings);
+	for (i= 0; i<count; i++) {
+		n=d2s(i+1, 0);
+		rowData=n + "\t" + row[i]+ "\t" + column[i] + "\t" + field[i] + "\t" + mean_std_ratio[i] + "\t" + satPix[i] + "\t"
+		+ maxCount[i] + "\t" + area[i] + "\t" + circularity[i] + "\t" + aspect_ratio[i] + "\t" + solidity[i] + "\t"
+		+ roundness[i] + "\t" + mean_nucleoside_analogue[i] + "\t" + intDen_nucleoside_analogue[i];
+		if (pattern[2] != "Empty") {
+			rowData+="\t" + mean_marker1[i] + "\t" + intDen_marker1[i];
+			if (pattern[3] != "Empty") {
+				rowData+="\t" + mean_marker2[i] + "\t" + intDen_marker2[i];
+			}
+		}
+		print(f, rowData);
+	}
+	// save as TXT
+	saveAs("Text", dir+File.separator+"ResultsTable_"+projectName+".csv");
+	selectWindow("Results table");
+	run("Close");
+	selectWindow("Results");
+	run("Close");
+	selectWindow("ROI Manager");
 	print("End of process");
 }
 
