@@ -30,7 +30,7 @@ setOption("ScaleConversions", true);
 roiManager("reset");
 print("\\Clear");
 roiManager("reset");
-run("Close All");
+close("*");
 
 //File management
 //Identification of the TIF files
@@ -448,6 +448,7 @@ if(mode=="Analysis") {
 	// define variables
 	total_fields=checkSelection*fieldsxwell;
 	count=0;
+	count_print=0;
 	row=newArray;
 	column=newArray;
 	field=newArray;
@@ -475,7 +476,7 @@ if(mode=="Analysis") {
 	for (i=0; i<nWells; i++) {
 		if (fileCheckbox[i]) {
 			for (j=0; j<fieldName.length; j++) {
-				print(wellName[i]+" (fld " +fieldName[j] + ") " + count+1+"/"+total_fields);
+				print(wellName[i]+" (fld " +fieldName[j] + ") " + count_print+1+"/"+total_fields);
 				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[0]+ " - "+pattern[0]+").tif";
 				open(dir+File.separator+counterstain);
 				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[1]+ " - "+pattern[1]+").tif";
@@ -488,6 +489,7 @@ if(mode=="Analysis") {
 						open(dir+File.separator+marker2);
 					}
 				}
+				count_print++;
 				
 				// quality control: blurring
 				selectImage(counterstain);
@@ -656,6 +658,7 @@ if(mode=="Analysis") {
 	selectWindow("Results");
 	run("Close");
 	selectWindow("ROI Manager");
+	run("Close");
 	print("End of process");
 }
 
