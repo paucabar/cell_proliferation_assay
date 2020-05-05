@@ -306,11 +306,16 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	}
 	Dialog.addMessage("Random fields per well:");
 	Dialog.addSlider("", 1, maxRandomFields, maxRandomFields);
+	measurements=newArray("Area", "Circ.", "AR", "Solidity", "Round", "Mean", "IntDen");
+	Dialog.addChoice("Measure", measurements, "Mean");
+	Dialog.addNumber("Split threshold", 500);
 }
 Dialog.show();
 selectionMode=Dialog.getRadioButton();
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	maxRandomFields=Dialog.getNumber();
+	measure_test=Dialog.getChoice();
+	split_test=Dialog.getNumber();
 }
 
 for (i=0; i<wellName.length; i++) {
@@ -402,7 +407,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					// visualization image
 					run("Set Measurements...", "  redirect=None decimal=2");
 					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");		
-					displayOutlines(channels_test[0], channels_test[1], 500);
+					displayOutlines(channels_test[0], channels_test[1], measure_test, split_test);
 
 					// clean up
 					close("nuclei_mask");
@@ -419,6 +424,10 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	// show as a stack
 	run("Images to Stack", "name=Stack title=[] use");
 	setBatchMode(false);
+	selectWindow("ROI Manager");
+	run("Close");
+	selectWindow("Results");
+	run("Close");
 	print("End of process");
 }
 
@@ -670,7 +679,7 @@ function min_max_size(string) {
 	return sizeArray;
 }
 
-function displayOutlines (image1, image2, threshold) {
+function displayOutlines (image1, image2, getMeasure, threshold) {
 	index1=indexOf(image1, "(");
 	index2=indexOf(image1, " wv");
 	well=substring(image1, 0, index1)+ ")";
@@ -678,20 +687,20 @@ function displayOutlines (image1, image2, threshold) {
 	name=well + " " +field;
 	run("Merge Channels...", "c1=["+image2+"] c3=["+image1+"] keep");
 	rename(name);
-	run("Set Measurements...", "mean display redirect=["+image2+"] decimal=2");
+	run("Set Measurements...", "area mean shape integrated display redirect=["+image2+"] decimal=2");
 	roiManager("deselect");
 	roiManager("measure");
 	nROI=roiManager("count");
 	roiManager("Set Line Width", 5);
 	
-	for (i=0; i<nROI; i++) {
-		mean=getResult("Mean", i);
+	for (a=0; a<nROI; a++) {
+		mean=getResult(getMeasure, a);
 		if (mean > threshold) {
-			roiManager("select", i);
+			roiManager("select", a);
 			roiManager("Set Color", "orange");
 			roiManager("draw");
 		} else {
-			roiManager("select", i);
+			roiManager("select", a);
 			roiManager("Set Color", "cyan");
 			roiManager("draw");
 		}
