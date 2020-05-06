@@ -169,8 +169,8 @@ if(importPD=="Yes") {
 	projectName="Project";
 	pattern[0]=channels_with_empty[0];
 	pattern[1]=channels_with_empty[0];
-	pattern[2]=channels[imagesxfield];
-	pattern[3]=channels[imagesxfield];
+	pattern[2]=channels_with_empty[imagesxfield];
+	pattern[3]=channels_with_empty[imagesxfield];
 	normalize=true;
 	gaussianNuclei=2;
 	thresholdNuclei=threshold[6];
@@ -185,11 +185,10 @@ if(importPD=="Yes") {
 }
 
 //'Select Parameters' dialog box
-//edit parameters
 title = "Select Parameters";
 Dialog.create(title);
 Dialog.addString("Project", projectName, 40);
-Dialog.setInsets(0, 170, 0);
+Dialog.setInsets(0, 140, 0);
 Dialog.addMessage("CHANNEL SELECTION:");
 Dialog.addChoice("Nuclei", channels, pattern[0]);
 Dialog.addToSameRow();
@@ -197,19 +196,18 @@ Dialog.addChoice("Nucleoside analogue", channels, pattern[1]);
 Dialog.addChoice("Marker_1", channels_with_empty, pattern[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels_with_empty, pattern[3]);
-Dialog.setInsets(0, 170, 0);
+Dialog.setInsets(0, 140, 0);
 Dialog.addMessage("SEGMENTATION:");
+Dialog.setInsets(0, 140, 0);
 Dialog.addCheckbox("Normalize", normalize);
 Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
-Dialog.addToSameRow();
 Dialog.addChoice("setAutoThreshold", threshold, thresholdNuclei);
 Dialog.addNumber("Erode (iterations)", erodeNuclei);
-Dialog.addToSameRow();
 Dialog.addNumber("Open (iterations)", openNuclei);
-Dialog.setInsets(0, 170, 0);
+Dialog.setInsets(0, 140, 0);
 Dialog.addCheckbox("Watershed", watershedNuclei);
 Dialog.addString("Size", size);
-Dialog.setInsets(0, 170, 0);
+Dialog.setInsets(0, 140, 0);
 Dialog.addMessage("ILLUMINATION CORRECTION IMAGES:");
 Dialog.addChoice("Nuclei", illumCorrList, flat_field[0]);
 Dialog.addToSameRow();
@@ -217,10 +215,9 @@ Dialog.addChoice("Nucleoside analogue", illumCorrList, flat_field[1]);
 Dialog.addChoice("Marker_1", illumCorrList, flat_field[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", illumCorrList, flat_field[3]);
-
 html = "<html>"
 	+"Check "
-	+"<a href=\"https://github.com/paucabar/cell_proliferation_assay/wiki\">documentation</a>"
+	+"<a href=\"https://github.com/paucabar/cell_proliferation_assay\">documentation</a>"
 	+" for help";
 Dialog.addHelp(html);
 Dialog.show()
@@ -254,9 +251,7 @@ for (i=0; i<4; i++) {
 		}
 	}
 }
-Array.print(pattern);
-Array.print(pattern_fullname);
-Array.print(flat_field);
+
 //check the channel selection
 if(pattern[0]==pattern[1]) {
 	beep();
@@ -323,6 +318,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	Dialog.addNumber("Split threshold", 500);
 	Dialog.addNumber("Set Line Width", 3);
 }
+Dialog.addHelp(html);
 Dialog.show();
 selectionMode=Dialog.getRadioButton();
 if(mode=="Pre-Analysis (parameter tweaking)") {
