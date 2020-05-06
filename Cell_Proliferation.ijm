@@ -309,6 +309,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	measurements=newArray("Area", "Circ.", "AR", "Solidity", "Round", "Mean", "IntDen");
 	Dialog.addChoice("Measure", measurements, "Mean");
 	Dialog.addNumber("Split threshold", 500);
+	Dialog.addNumber("Set Line Width", 3);
 }
 Dialog.show();
 selectionMode=Dialog.getRadioButton();
@@ -316,6 +317,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	maxRandomFields=Dialog.getNumber();
 	measure_test=Dialog.getChoice();
 	split_test=Dialog.getNumber();
+	roi_line_width=Dialog.getNumber();
 }
 
 for (i=0; i<wellName.length; i++) {
@@ -364,11 +366,15 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					// open images
 					channels_test=newArray(2);
 					for (i=0; i<imagesxfield; i++) {
-						open(dir+File.separator+tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
-						field_channel=getTitle();
-						for (j=0; j<channels_test.length; j++) {
-							if (indexOf(field_channel, pattern[j]) != -1) {
-								channels_test[j]=field_channel;
+						index1=indexOf(tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i], "wv ");
+						index2=lastIndexOf(tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i], " - ");
+						current_channel=substring(tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i], index1+3, index2);
+						if (current_channel == pattern[0] || current_channel == pattern[1]) {
+							open(dir+File.separator+tifArray[(z*fieldsxwell*imagesxfield)+(number*imagesxfield)+i]);
+							if (current_channel == pattern[0]) {
+								channels_test[0]=getTitle();
+							} else {
+								channels_test[1]=getTitle();
 							}
 						}
 					}				
@@ -407,7 +413,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					// visualization image
 					run("Set Measurements...", "  redirect=None decimal=2");
 					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");		
-					displayOutlines(channels_test[0], channels_test[1], measure_test, split_test);
+					displayOutlines(channels_test[0], channels_test[1], measure_test, split_test, roi_line_width);
 
 					// clean up
 					close("nuclei_mask");
@@ -682,7 +688,7 @@ function min_max_size(string) {
 	return sizeArray;
 }
 
-function displayOutlines (image1, image2, getMeasure, threshold) {
+function displayOutlines (image1, image2, getMeasure, threshold, line_width) {
 	index1=indexOf(image1, "(");
 	index2=indexOf(image1, " wv");
 	well=substring(image1, 0, index1)+ ")";
@@ -694,7 +700,7 @@ function displayOutlines (image1, image2, getMeasure, threshold) {
 	roiManager("deselect");
 	roiManager("measure");
 	nROI=roiManager("count");
-	roiManager("Set Line Width", 5);
+	roiManager("Set Line Width", line_width);
 	
 	for (a=0; a<nROI; a++) {
 		mean=getResult(getMeasure, a);
