@@ -191,12 +191,12 @@ Dialog.create(title);
 Dialog.addString("Project", projectName, 40);
 Dialog.setInsets(0, 170, 0);
 Dialog.addMessage("CHANNEL SELECTION:");
-Dialog.addChoice("Nuclei", channels_with_empty, pattern[0]);
+Dialog.addChoice("Nuclei", channels, pattern[0]);
 Dialog.addToSameRow();
-Dialog.addChoice("Nucleoside analogue", channels_with_empty, pattern[1]);
-Dialog.addChoice("Marker_1", channels, pattern[2]);
+Dialog.addChoice("Nucleoside analogue", channels, pattern[1]);
+Dialog.addChoice("Marker_1", channels_with_empty, pattern[2]);
 Dialog.addToSameRow();
-Dialog.addChoice("Marker_2", channels, pattern[3]);
+Dialog.addChoice("Marker_2", channels_with_empty, pattern[3]);
 Dialog.setInsets(0, 170, 0);
 Dialog.addMessage("SEGMENTATION:");
 Dialog.addCheckbox("Normalize", normalize);
@@ -229,14 +229,6 @@ pattern[0]=Dialog.getChoice();
 pattern[1]=Dialog.getChoice();
 pattern[2]=Dialog.getChoice();
 pattern[3]=Dialog.getChoice();
-pattern_fullname=newArray("Empty", "Empty", "Empty", "Empty");
-for (i=0; i<4; i++) {
-	for (j= 0; j<4; j++) {
-		if (startsWith(channels_fullname[i], pattern[j])) {
-			pattern_fullname[i]=channels_fullname[i];
-		}
-	}
-}
 normalize=Dialog.getCheckbox();
 gaussianNuclei=Dialog.getNumber();
 thresholdNuclei=Dialog.getChoice();
@@ -248,7 +240,23 @@ flat_field[0]=Dialog.getChoice();
 flat_field[1]=Dialog.getChoice();
 flat_field[2]=Dialog.getChoice();
 flat_field[3]=Dialog.getChoice();
-
+if (pattern[2]=="Empty" && pattern[3] != "Empty") {
+	pattern[2]=pattern[3];
+	pattern[3]="Empty";
+	flat_field[2]=flat_field[3];
+	flat_field[3]="None";
+}
+pattern_fullname=newArray("Empty", "Empty", "Empty", "Empty");
+for (i=0; i<4; i++) {
+	for (j= 0; j<4; j++) {
+		if (startsWith(channels_fullname[i], pattern[j])) {
+			pattern_fullname[i]=channels_fullname[i];
+		}
+	}
+}
+Array.print(pattern);
+Array.print(pattern_fullname);
+Array.print(flat_field);
 //check the channel selection
 if(pattern[0]==pattern[1]) {
 	beep();
