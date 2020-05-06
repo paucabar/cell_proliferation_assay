@@ -107,24 +107,20 @@ for (i=0; i<fieldsxwell; i++) {
 
 //extraction of the ‘channel’ information from the images’ filenames
 //create an array containing the names of the channels
-channels=newArray(imagesxfield+1);
+channels=newArray(imagesxfield);
+channels_fullname=newArray(imagesxfield);
 count=0;
-while (channels.length > count+1) {
-	index1=indexOf(tifArray[count], "wv ");
-	index2=lastIndexOf(tifArray[count], " - ");
-	channels[count]=substring(tifArray[count], index1+3, index2);
-	count++;
-}
-
-//add an 'Empty' option into the channels name array
 for (i=0; i<channels.length; i++) {
-	if(i>=imagesxfield) {
-		channels[i]="Empty";
-	}
+	index1=indexOf(tifArray[i], "wv ");
+	index2=lastIndexOf(tifArray[i], " - ");
+	index3=lastIndexOf(tifArray[i], ")");
+	channels[i]=substring(tifArray[i], index1 + 3, index2);
+	channels_fullname[i]=substring(tifArray[i], index1 + 3, index3);
 }
 
-//create a channel array without the 'Empty' option
-channelsSlice=Array.slice(channels, 0, channels.length-1);
+//add an 'Empty' option into a duplicated array of the channels' name
+channels_with_empty=channels;
+channels_with_empty[channels_with_empty.length]="Empty";
 
 //set some parameter menu arrays
 threshold=getList("threshold.methods");
@@ -171,8 +167,8 @@ if(importPD=="Yes") {
 } else {
 	//default parameters
 	projectName="Project";
-	pattern[0]=channelsSlice[0];
-	pattern[1]=channelsSlice[0];
+	pattern[0]=channels_with_empty[0];
+	pattern[1]=channels_with_empty[0];
 	pattern[2]=channels[imagesxfield];
 	pattern[3]=channels[imagesxfield];
 	normalize=true;
@@ -195,9 +191,9 @@ Dialog.create(title);
 Dialog.addString("Project", projectName, 40);
 Dialog.setInsets(0, 170, 0);
 Dialog.addMessage("CHANNEL SELECTION:");
-Dialog.addChoice("Nuclei", channelsSlice, pattern[0]);
+Dialog.addChoice("Nuclei", channels_with_empty, pattern[0]);
 Dialog.addToSameRow();
-Dialog.addChoice("Nucleoside analogue", channelsSlice, pattern[1]);
+Dialog.addChoice("Nucleoside analogue", channels_with_empty, pattern[1]);
 Dialog.addChoice("Marker_1", channels, pattern[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels, pattern[3]);
@@ -233,6 +229,14 @@ pattern[0]=Dialog.getChoice();
 pattern[1]=Dialog.getChoice();
 pattern[2]=Dialog.getChoice();
 pattern[3]=Dialog.getChoice();
+pattern_fullname=newArray("Empty", "Empty", "Empty", "Empty");
+for (i=0; i<4; i++) {
+	for (j= 0; j<4; j++) {
+		if (startsWith(channels_fullname[i], pattern[j])) {
+			pattern_fullname[i]=channels_fullname[i];
+		}
+	}
+}
 normalize=Dialog.getCheckbox();
 gaussianNuclei=Dialog.getNumber();
 thresholdNuclei=Dialog.getChoice();
@@ -483,15 +487,15 @@ if(mode=="Analysis") {
 		if (fileCheckbox[i]) {
 			for (j=0; j<fieldName.length; j++) {
 				print(wellName[i]+" (fld " +fieldName[j] + ") " + count_print+1+"/"+total_fields);
-				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[0]+ " - "+pattern[0]+").tif";
+				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[0]+").tif";
 				open(dir+File.separator+counterstain);
-				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[1]+ " - "+pattern[1]+").tif";
+				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[1]+").tif";
 				open(dir+File.separator+nucleoside_analogue);
 				if (pattern[2] != "Empty") {
-					marker1=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[2]+ " - "+pattern[2]+").tif";
+					marker1=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[2]+").tif";
 					open(dir+File.separator+marker1);
 					if (pattern[3] != "Empty") {
-						marker2=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern[3]+ " - "+pattern[3]+").tif";
+						marker2=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[3]+").tif";
 						open(dir+File.separator+marker2);
 					}
 				}
@@ -599,6 +603,7 @@ if(mode=="Analysis") {
 				// measure additional markers
 				if (pattern[2] != "Empty") {
 					run("Set Measurements...", "mean integrated display redirect=["+marker1+"] decimal=2");
+					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear");
 					n=nResults;
 					for (k=0; k<n; k++) {
 						mean_marker1[count_m1]=getResult("Mean", k);
@@ -607,6 +612,7 @@ if(mode=="Analysis") {
 					}
 					if (pattern[3] != "Empty") {
 						run("Set Measurements...", "mean integrated display redirect=["+marker2+"] decimal=2");
+						run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear");
 						for (k=0; k<n; k++) {
 							mean_marker2[count_m2]=getResult("Mean", k);
 							intDen_marker2[count_m2]=getResult("IntDen", k);
