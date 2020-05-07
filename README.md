@@ -42,7 +42,7 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1TpVa
 
 ### Pre-analysis mode
 
-1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
+1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
 3. Check **Load project** to use a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on reference images
@@ -65,7 +65,7 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1TpVa
 
 ### Analysis mode
 
-1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
+1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
 3. Check **Load project** to use a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on reference images
