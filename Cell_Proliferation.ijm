@@ -17,8 +17,8 @@ macro "Cell_Proliferation" {
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
-#@ String (label="<html>Load pre-established<br>parameter dataset?</html>", choices={"No", "Yes"}, persist=true, style="radioButtonHorizontal") importPD
-#@ String (label="<html>Load llumination<br>correction reference<br>image?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
+#@ String (label="<html>Load function</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
+#@ String (label="<html>Load project</html>", choices={"No", "Yes"}, persist=true, style="radioButtonHorizontal") importPD
 #@ String (label="<html>Save ROIs?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") saveROIs
 #@ String (label=" ", value="<html><img src=\"https://live.staticflickr.com/65535/48557333566_d2a51be746_o.png\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
