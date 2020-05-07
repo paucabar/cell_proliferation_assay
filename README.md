@@ -2,23 +2,22 @@
 
 ## Description
 
-Pulse-chase experiments using 5-bromo-2'-deoxyuridine (BrdU), or the more recent EdU (5-etynil-2'-deoxyuridine), enable the identification of cells going through S phase. Furthermore, these DNA synthesis-based methods can be combined with the detection of proliferation-specific proteins to estimate the percentage of cells in other cell cycle phases, thus obtaining a more detailed analysis of the culture proliferation. One of the most commonly used markers is Ki67, which is present within the nucleus of cycling cells during G1, S, G2, andM phases, but not during quiescence (G0). Additionally, phosphohistone 3 (PHH3) can be used to identify those cells that are specifically undergoing mitosis (M phase). By combining a short nucleoside analogue pulse (S phase) with immunocytochemical
+Pulse-chase experiments using 5-bromo-2'-deoxyuridine (BrdU), or the more recent EdU (5-etynil-2'-deoxyuridine), enable the identification of cells going through S phase. Furthermore, these DNA synthesis-based methods can be combined with the detection of proliferation-specific proteins to estimate the percentage of cells in other cell cycle phases, thus obtaining a more detailed analysis of the culture proliferation. One of the most commonly used markers is Ki67, which is present within the nucleus of cycling cells during G1, S, G2, and M phases, but not during quiescence (G0). Additionally, phosphohistone 3 (PHH3) can be used to identify those cells that are specifically undergoing mitosis (M phase). By combining a short nucleoside analogue pulse (S phase) with immunocytochemical
 detection of Ki67 (cycling cells) and PHH3 (M phase), the entire range of cell cycle phases in the sample can be determined. Alternatively, nucleoside pulse-chase may be combined with the detection of other nuclear markers, e.g., antigens associated to specific subpopulations present in the culture, which would allow to estimate the proliferation (S phase) rate of each individual subpopulation.
 
-Our main goal here was to develop a protocol for non-supervised, high throughput image analysis of _ex vivo_ cell proliferation assays based on nucleoside analogue pulse alone or in combination with other nuclear markers. Our assay has been deplyed to be imaged using the high content microscope IN Cell Analyzer 2000 (GE Healthcare), so the script takes as imput datasets acquired using this and other IN Cell Analyzer versions. It consists of an ImageJ macroinstruction which can be easily added and kept to date using the Fiji distribution of ImageJ, as explained above. The workflow segments the individual nuclei, determines the nucleoside analogue absence/presence, and measures the signal of up to two additional nuclear markers. Therefore, the assay must include at least two channels per field-of-view. On one hand, the counterstain channel to segment the nuclei. On the other hand, the nucleoside analogue channel to measure the signal of each nucleus.
+Our main goal here was to develop a protocol for non-supervised, high throughput image analysis of _ex vivo_ cell proliferation assays based on nucleoside analogue pulse alone or in combination with other nuclear markers. Our assay has been deplyed to be imaged using the high content microscope IN Cell Analyzer 2000 (GE Healthcare), so the script takes as imput datasets acquired using this and other IN Cell Analyzer versions. It consists of an ImageJ macroinstruction which can be easily added and kept to date using the Fiji distribution of ImageJ, as explained above. The workflow segments the individual nuclei and measures the signal of up to three nuclear markers.  Moreover, the results table include measurements for post-processing image- and object-quality assessment. The assay must include at least two channels per field-of-view: i) on one hand, the counterstain channel to segment the nuclei; ii) on the other hand, the nucleoside analogue channel to measure the signal of each nucleus.
 
-Please note that the workflow do not include an image illumination correction step, so it is advisable to perform it as a pre-processing step. In the **Usage** section of this README you will find useful information to this aim.
+Please note that the (optional) illumination correction step included in the workflow requires to load a correction function. In the **Usage** section of this README you will find useful information to this aim.
 
 In order to assess the output of the assay it is advisable to use a different software suited to explore high content microscopy data, such as [shinyHTM](https://github.com/embl-cba/shinyHTM/blob/master/README.md#shinyhtm).
 
-**Please note that Cell Proliferation is based on a publication:**
+**Please note that the Cell Proliferation script is based on a publication. The original version is the Cell ProliferationHTS script (outdated). How to cite Cell Proliferation in publications:**
 
 * Carrillo-Barberà P., Morante-Redolat J.M., Pertusa J.F. (2019) "[Cell Proliferation High-Content Screening on Adherent Cell Cultures](https://doi.org/10.1007/978-1-4939-9686-5_14)". In: Rebollo E., Bosch M. (eds) Computer Optimized Microscopy. Methods in Molecular Biology, vol 2040. Humana, New York, NY. DOI: https://doi.org/10.1007/978-1-4939-9686-5_14
 
 ## Requirements
 
 * [Fiji](https://fiji.sc/)
-* _Morphology_ update site (Fiji)
 * Image dataset following an IN Cell Analyzer file naming convention (note that the NeuroMol update site includes a [macroinstruction](https://github.com/paucabar/other_macros) to turn data acquired with diferent high content microscopes into an IN Cell Analyzer file naming convention dataset)
 
 ## Installation
@@ -37,41 +36,48 @@ In order to assess the output of the assay it is advisable to use a different so
 
 ## Test Dataset
 
-Download an example [image dataset](https://drive.google.com/drive/folders/1jwnGSs7girbFtYbgd5Bqg1KrctMR7iJa?usp=sharing).
+Download an example [image dataset](https://drive.google.com/drive/folders/1TpVaDCsidEvTLiANmfiKwsXUWDTw9Xes?usp=sharing). Please note that the dataset also includes a subfolder containing correction functions, for the illumination correction of each channel, and a pre-established set of parameters.
 
 ## Usage
-
-### Illumination correction (recommended)
-
-_soon..._
 
 ### Pre-analysis mode
 
 1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
 2. Select the directory containing the images (.tif files)
-3. Check **Load project** to use a pre-stablished parameter dataset
-4. Ignore the **Save ROIs** option
-5. Ok
-6. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
-7. Ok
-8. Select the number of random images that you want to test per well
-9. Check the output (_see Figure 1_)
-10. Note that **Pre-analysis mode (visualization)** allows to rapidly display the images generated by means of a previous pre-analysis
+3. Check **Load project** to use a pre-stablished set of parameters
+4. Check **Load function** to perform illumination correction based on reference images
+5. Note that **Save ROIs** only works within the **Analysis mode**
+6. Ok
+7. If **Load function** is checked, a window will prompt to browse the folder containing the reference image(s)
+8. If **Load project** is checked, a window will prompt to browse the corresponding file
+9. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
+10. Ok
+11. Select the wells to be pre-analysed
+12. Select the number of random images that you want to test per well (up to 10 if the number of fields-of-view is greater than that number)
+13. Select a feature to classify the objects
+14. Select a threshold to split the objects according to the selected feature
+15. Ok
+16. Check the output (_see Figure 1_)
 
-![image](https://user-images.githubusercontent.com/39589980/79926791-18f88380-843e-11ea-9373-e8acf37ecfe1.png)
+![image](https://user-images.githubusercontent.com/39589980/81289441-b969bd00-9066-11ea-85df-96e7a98be6ce.png)
 
-**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack composed of images. Each image shows the merge of the counterstain (blue) and the nucleoside analogue (red) channels. Additionally, outlines represent the segmentation output of nuclei (cyan) and nucleoside analogue (orange).
+**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack. Each image shows the merge of the counterstain (blue) and the nucleoside analogue (red) channels. Additionally, outlines represent the segmentation output of nuclei with different colours, depending on the classification outpt. Objects with feature values less than or equal to the established threshold are outlined in cyan. Conversely, objects with feature values greater the established threshold are outlined in orange. **A)** Visualization of the mean gray value split at 250 (a.u.). **B)** Visualization of the solidity split at 0.9. **a.u.:** arbitrary unit.
 
 ### Analysis mode
 
 1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferationHCS</code>)
 2. Select the directory containing the images (.tif files)
-3. Check **Load project** to use a pre-stablished parameter dataset
-4. Check **Save ROIs** to store the regions of interest of the segmented nuclei
-5. Ok
-6. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
-7. Run
-8. A series of new files will be saved within the selected directory: a parameter (.txt) file, a results table (.csv) file and the ROI (.zip) files (if checked)
+3. Check **Load project** to use a pre-stablished set of parameters
+4. Check **Load function** to perform illumination correction based on reference images
+5. Check **Save ROIs** to save the nuclei ROIs
+6. Ok
+7. If **Load function** is checked, a window will prompt to browse the folder containing the reference image(s)
+8. If **Load project** is checked, a window will prompt to browse the corresponding file
+9. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
+10. Ok
+11. Select the wells to be analysed
+12. Ok
+8. A series of new files will be saved within the selected directory: a parameter file (.txt), a results table file (.csv) and, if checked, the ROI  files (.zip)
 
 ## Contributors
 
