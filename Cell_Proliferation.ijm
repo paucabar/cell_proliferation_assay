@@ -449,6 +449,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 if(mode=="Analysis") {
 	print("Running analysis");
 	setBatchMode(true);
+	start=getTime();
 
 	// open illumination correction images
 	if (illumCorr == "Yes") {
@@ -490,7 +491,11 @@ if(mode=="Analysis") {
 	for (i=0; i<nWells; i++) {
 		if (fileCheckbox[i]) {
 			for (j=0; j<fieldName.length; j++) {
-				print(wellName[i]+" (fld " +fieldName[j] + ") " + count_print+1+"/"+total_fields);
+				print("\\Update1:"+wellName[i]+" (fld " +fieldName[j] + ") " + count_print+1+"/"+total_fields);
+				elapsed=round((getTime()-start)/1000);
+				expected=elapsed/(count_print+1)*total_fields;
+				print("\\Update2:Elapsed time "+hours_minutes_seconds(elapsed));
+				print("\\Update3:Estimated time "+hours_minutes_seconds(expected));
 				counterstain=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[0]+").tif";
 				open(dir+File.separator+counterstain);
 				nucleoside_analogue=wellName[i]+"(fld "+fieldName[j]+" wv "+pattern_fullname[1]+").tif";
@@ -640,6 +645,11 @@ if(mode=="Analysis") {
 	}
 	close("*");
 	setBatchMode(false);
+	elapsed=round((getTime()-start)/1000);
+	print("\\Update0:End of process");
+	print("\\Update1:Elapsed time "+hours_minutes_seconds(elapsed));
+	print("\\Update2:Saving results");
+	print("\\Update3:");
 
 	// results table
 	title1 = "Results table";
@@ -675,7 +685,7 @@ if(mode=="Analysis") {
 	run("Close");
 	selectWindow("ROI Manager");
 	run("Close");
-	print("End of process");
+	print("\\Update2:Analysis successfully completed");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -726,5 +736,21 @@ function displayOutlines (image1, image2, getMeasure, threshold, line_width) {
 	}
 	roiManager("reset");
 	run("Clear Results");
+}
+
+function hours_minutes_seconds(seconds) {
+	hours=seconds/3600;
+	hours_floor=floor(hours);
+	remaining_seconds=seconds-(hours_floor*3600);
+	remaining_minutes=remaining_seconds/60;
+	minutes_floor=floor(remaining_minutes);
+	remaining_seconds=remaining_seconds-(minutes_floor*60);
+	hours_floor=d2s(hours_floor, 0);
+	minutes_floor=d2s(minutes_floor, 0);
+	remaining_seconds=d2s(remaining_seconds, 0);
+	if (lengthOf(hours_floor) < 2) hours_floor="0"+hours_floor;
+	if (lengthOf(minutes_floor) < 2) minutes_floor="0"+minutes_floor;
+	if (lengthOf(remaining_seconds) < 2) remaining_seconds="0"+remaining_seconds;
+	return hours_floor+":"+minutes_floor+":"+remaining_seconds;
 }
 }
