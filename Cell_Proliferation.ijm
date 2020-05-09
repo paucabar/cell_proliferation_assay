@@ -598,7 +598,7 @@ if(mode=="Analysis") {
 				}
 
 				// save ROIs
-				if (saveROIs == "Yes") {
+				if (saveROIs == "Yes" && n != 0) {
 					roiManager("deselect");
 					roiManager("save", dir+File.separator+wellName[i]+" (fld " +fieldName[j] + ") ROI.zip");
 				}
