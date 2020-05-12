@@ -77,7 +77,7 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1TpVa
 10. Ok
 11. Select the wells to be analysed
 12. Ok
-8. A series of new files will be saved within the selected directory: a parameter file (.txt), a results table file (.csv) and, if checked, the ROI  files (.zip)
+8. A series of new files will be saved within the selected directory: a parameters set file (.txt), a results table file (.csv), a quality control (QC) metrics file (.csv) and, if checked, the ROI  files (.zip)
 
 ## Contributors
 
