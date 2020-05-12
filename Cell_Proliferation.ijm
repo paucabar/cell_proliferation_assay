@@ -129,7 +129,7 @@ flat_field=newArray(4);
 
 //create a flat-field array with a 'None' option
 if(illumCorr=="Yes") {
-	illumCorrPath=getDirectory("Choose the folder containing the flat-field images");
+	illumCorrPath=getDirectory("Choose the folder with the illumination correction functions");
 	illumCorrList=getFileList(illumCorrPath);
 	concatNone=newArray("None");
 	illumCorrList=Array.concat(concatNone,illumCorrList);
@@ -680,6 +680,30 @@ if(mode=="Analysis") {
 	// save as TXT
 	saveAs("Text", dir+File.separator+"ResultsTable_"+projectName+".csv");
 	selectWindow("Results table");
+	run("Close");
+
+	// quality control metrics table
+	title1 = "QC_metrics";
+	title2 = "["+title1+"]";
+	f = title2;
+	run("Table...", "name="+title2+" width=500 height=500");
+	headings="\\Headings:Row\tColumn\tField\tMean/s.d.\t%SatPix\tMaxCountRatio";
+	print(f, headings);
+	rowLast="row";
+	columnLast="column";
+	fieldLast="field";
+	for (i= 0; i<count; i++) {
+		if (row[i] != rowLast || column[i] != columnLast || field[i] != fieldLast) {
+			rowLast=row[i];
+			columnLast=column[i];
+			fieldLast=field[i];
+			rowData=row[i]+ "\t" + column[i] + "\t" + field[i] + "\t" + mean_std_ratio[i] + "\t" + satPix[i] + "\t" + maxCount[i];
+			print(f, rowData);
+		}
+	}
+	// save as TXT
+	saveAs("Text", dir+File.separator+"QC_metrics_"+projectName+".csv");
+	selectWindow("QC_metrics");
 	run("Close");
 	selectWindow("Results");
 	run("Close");
