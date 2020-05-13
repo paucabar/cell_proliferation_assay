@@ -1,0 +1,16 @@
+Project	Project
+Nuclei	DAPI
+Nucleoside analogue	Cy3
+Marker1	FITC
+Marker2	TL-Brightfield
+Enhance (nuclei)	1
+Gaussian (nuclei)	2
+Threshold (nuclei)	Otsu
+Erode (nuclei)	0
+Open (nuclei)	2
+Watershed (nuclei)	1
+Size	20-200
+Flat-field (nuclei)	Flat-field_DAPI - DAPI.tif
+Flat-field (nucleoside analogue)	Flat-field_Cy3 - Cy3.tif
+Flat-field (marker1)	Flat-field_FITC - FITC.tif
+Flat-field (marker2)	None
