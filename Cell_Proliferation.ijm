@@ -19,6 +19,7 @@ macro "Cell_Proliferation" {
 #@ File(label="Select a directory:", style="directory") dir
 #@ String (label="<html>Load function</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
 #@ String (label="<html>Load project</html>", choices={"No", "Yes"}, persist=true, style="radioButtonHorizontal") importPD
+#@ String (label="StarDist", choices={"No", "Yes"}, style="radioButtonHorizontal", persist=true) stardist
 #@ String (label="<html>Save ROIs?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") saveROIs
 #@ String (label=" ", value="<html><img src=\"https://live.staticflickr.com/65535/48557333566_d2a51be746_o.png\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
@@ -29,7 +30,7 @@ setOption("BlackBackground", false);
 setOption("ScaleConversions", true);
 roiManager("reset");
 print("\\Clear");
-roiManager("reset");
+run("Clear Results");
 close("*");
 
 //File management
@@ -245,7 +246,7 @@ if (pattern[2]=="Empty" && pattern[3] != "Empty") {
 }
 pattern_fullname=newArray("Empty", "Empty", "Empty", "Empty");
 for (i=0; i<4; i++) {
-	for (j= 0; j<4; j++) {
+	for (j=0; j<4; j++) {
 		if (startsWith(channels_fullname[i], pattern[j])) {
 			pattern_fullname[i]=channels_fullname[i];
 		}
@@ -402,31 +403,43 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 							close(flat_field[1]);
 						}
 					}
-					
-					// nuclei segmentation
-					selectImage(channels_test[0]);
-					run("Duplicate...", "title=nuclei_mask");
-					if (normalize) {
-						run("Enhance Contrast...", "saturated=0.1 normalize");
-					}
-					run("Gaussian Blur...", "sigma="+gaussianNuclei);
-					setAutoThreshold(thresholdNuclei+" dark");
-					run("Make Binary");
-					run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
-					run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
-					if (watershedNuclei) {
-						run("Watershed");
-					}
 
-					// visualization image
-					run("Set Measurements...", "  redirect=None decimal=2");
-					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");		
+					if (stardist == "No") {
+						// nuclei segmentation
+						selectImage(channels_test[0]);
+						run("Duplicate...", "title=nuclei_mask");
+						if (normalize) {
+							run("Enhance Contrast...", "saturated=0.1 normalize");
+						}
+						run("Gaussian Blur...", "sigma="+gaussianNuclei);
+						setAutoThreshold(thresholdNuclei+" dark");
+						run("Make Binary");
+						run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
+						run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
+						if (watershedNuclei) {
+							run("Watershed");
+						}
+	
+						// visualization image
+						run("Set Measurements...", "  redirect=None decimal=2");
+						run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude add");
+						close("nuclei_mask");
+					} else {
+						run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'"+channels_test[0]
+						+"', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', "
+						+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'0.1', 'outputType':'ROI Manager', 'nTiles':'1', "
+						+"'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', "
+						+"'showProbAndDist':'false'], process=[false]");
+						sizeSelection(size[0], size[1]);
+						excludeEdges();
+					}
 					displayOutlines(channels_test[0], channels_test[1], measure_test, split_test, roi_line_width);
 
 					// clean up
-					close("nuclei_mask");
 					close(channels_test[0]);
 					close(channels_test[1]);
+					roiManager("reset");
+					run("Clear Results");
 
 					// update loop variables
 					randomArray[count]=number;
@@ -732,6 +745,54 @@ function min_max_size(string) {
 	return sizeArray;
 }
 
+function sizeSelection(min, max) {
+	roiDiscard=newArray();
+	run("Set Measurements...", "area display redirect=None decimal=2");
+	roiManager("deselect");
+	roiManager("measure");
+	nROI=roiManager("count");
+	discardCount=0;
+	for (i=0; i<nROI; i++) {
+		area=getResult("Area", i);
+		if (area < min || area > max) {
+			roiDiscard[discardCount]=i;
+			discardCount++;
+		}
+	}
+	if (discardCount != 0) {
+		roiManager("select", roiDiscard);
+		roiManager("delete");
+	}
+	run("Clear Results");
+}
+
+function excludeEdges() {
+	roiEdge=newArray();
+	run("Set Measurements...", "bounding display redirect=None decimal=2");
+	roiManager("deselect");
+	roiManager("measure");
+	nROI=roiManager("count");
+	getDimensions(width, height, channels, slices, frames);
+	toScaled(width);
+	toScaled(height);
+	roiEdgeCount=0;
+	for (i=0; i<nROI; i++) {
+		bx=getResult("BX", i);
+		by=getResult("BY", i);
+		iWidth=getResult("Width", i);
+		iHeight=getResult("Height", i);	
+		if (bx == 0 || by == 0 || bx + iWidth >= width || by + iHeight >= height) {
+			roiEdge[roiEdgeCount]=i;
+			roiEdgeCount++;
+		}
+	}
+	if (roiEdgeCount != 0) {
+		roiManager("select", roiEdge);
+		roiManager("delete");
+	}
+	run("Clear Results");
+}
+
 function displayOutlines (image1, image2, getMeasure, threshold, line_width) {
 	index1=indexOf(image1, "(");
 	index2=indexOf(image1, " wv");
@@ -758,8 +819,6 @@ function displayOutlines (image1, image2, getMeasure, threshold, line_width) {
 			roiManager("draw");
 		}
 	}
-	roiManager("reset");
-	run("Clear Results");
 }
 
 function hours_minutes_seconds(seconds) {
