@@ -245,10 +245,10 @@ if (pattern[2]=="Empty" && pattern[3] != "Empty") {
 	flat_field[3]="None";
 }
 pattern_fullname=newArray("Empty", "Empty", "Empty", "Empty");
-for (i=0; i<4; i++) {
-	for (j=0; j<4; j++) {
+for (i=0; i<imagesxfield; i++) {
+	for (j=0; j<imagesxfield; j++) {
 		if (startsWith(channels_fullname[i], pattern[j])) {
-			pattern_fullname[i]=channels_fullname[i];
+			pattern_fullname[j]=channels_fullname[i];
 		}
 	}
 }
@@ -575,24 +575,38 @@ if(mode=="Analysis") {
 					}
 				}
 
-				// nuclei segmentation
-				selectImage(counterstain);
-				run("Duplicate...", "title=nuclei_mask");
-				if (normalize) {
-					run("Enhance Contrast...", "saturated=0.1 normalize");
+				if (stardist == "No") {
+					// nuclei segmentation
+					selectImage(counterstain);
+					run("Duplicate...", "title=nuclei_mask");
+					if (normalize) {
+						run("Enhance Contrast...", "saturated=0.1 normalize");
+					}
+					run("Gaussian Blur...", "sigma="+gaussianNuclei);
+					setAutoThreshold(thresholdNuclei+" dark");
+					run("Make Binary");
+					run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
+					run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
+					if (watershedNuclei) {
+						run("Watershed");
+					}
+	
+					// measure nucleoside analogue intensity and object area and shape descriptors
+					run("Set Measurements...", "area mean shape integrated display redirect=None decimal=2");
+					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" exclude clear add");
+				} else {
+					run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'"+counterstain
+					+"', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', "
+					+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'0.1', 'outputType':'ROI Manager', 'nTiles':'1', "
+					+"'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', "
+					+"'showProbAndDist':'false'], process=[false]");
+					sizeSelection(size[0], size[1]);
+					excludeEdges();
 				}
-				run("Gaussian Blur...", "sigma="+gaussianNuclei);
-				setAutoThreshold(thresholdNuclei+" dark");
-				run("Make Binary");
-				run("Options...", "iterations="+erodeNuclei+" count=1 pad do=Erode");
-				run("Options...", "iterations="+openNuclei+" count=1 pad do=Open");
-				if (watershedNuclei) {
-					run("Watershed");
-				}
-
-				// measure nucleoside analogue intensity and object area and shape descriptors
-				run("Set Measurements...", "area mean shape integrated display redirect=["+nucleoside_analogue+"] decimal=2");
-				run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear add");
+				run("Set Measurements...", "area mean shape integrated display redirect=None decimal=2");
+				selectImage(nucleoside_analogue);
+				roiManager("deselect");
+				roiManager("measure");
 				n=nResults;
 				for (k=0; k<n; k++) {
 					area[count]=getResult("Area", k);
@@ -614,36 +628,44 @@ if(mode=="Analysis") {
 					maxCount[count]=maxima_ratio;
 					count++;
 				}
-
-				// save ROIs
-				if (saveROIs == "Yes" && n != 0) {
-					roiManager("deselect");
-					roiManager("save", dir+File.separator+wellName[i]+" (fld " +fieldName[j] + ") ROI.zip");
-				}
-				roiManager("reset");
+				run("Clear Results");
 
 				// measure additional markers
 				if (pattern[2] != "Empty") {
-					run("Set Measurements...", "mean integrated display redirect=["+marker1+"] decimal=2");
-					run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear");
+					run("Set Measurements...", "mean integrated display redirect=None decimal=2");
+					selectImage(marker1);
+					roiManager("deselect");
+					roiManager("measure");
 					n=nResults;
 					for (k=0; k<n; k++) {
 						mean_marker1[count_m1]=getResult("Mean", k);
 						intDen_marker1[count_m1]=getResult("IntDen", k);
 						count_m1++;
 					}
+					run("Clear Results");
 					if (pattern[3] != "Empty") {
-						run("Set Measurements...", "mean integrated display redirect=["+marker2+"] decimal=2");
-						run("Analyze Particles...", "size="+size[0]+"-"+size[1]+" display exclude clear");
+						run("Set Measurements...", "mean integrated display redirect=None decimal=2");
+						selectImage(marker2);
+						roiManager("deselect");
+						roiManager("measure");
+						n=nResults;
 						for (k=0; k<n; k++) {
 							mean_marker2[count_m2]=getResult("Mean", k);
 							intDen_marker2[count_m2]=getResult("IntDen", k);
 							count_m2++;
 						}
+						run("Clear Results");
 					}
 				}
 
+				// save ROIs
+				if (saveROIs == "Yes" && n != 0) {
+					roiManager("deselect");
+					roiManager("save", dir+File.separator+wellName[i]+" (fld " +fieldName[j] + ") ROI.zip");
+				}
+
 				// clean up
+				roiManager("reset");
 				close(counterstain);
 				close(nucleoside_analogue);	
 				close("nuclei_mask");
