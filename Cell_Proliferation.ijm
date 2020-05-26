@@ -17,9 +17,8 @@ macro "Cell_Proliferation" {
 #@ String (label=" ", value="<html><font size=6><b>High Content Screening</font><br><font color=teal>Cell Proliferation</font></b></html>", visibility=MESSAGE, persist=false) heading
 #@ String(label="Select mode:", choices={"Analysis", "Pre-Analysis (parameter tweaking)"}, style="radioButtonVertical") mode
 #@ File(label="Select a directory:", style="directory") dir
+#@ String (label="<html>Project</html>", choices={"Filtering", "StarDist", "Load"}, persist=true, style="radioButtonHorizontal") project
 #@ String (label="<html>Load function</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") illumCorr
-#@ String (label="<html>Load project</html>", choices={"No", "Yes"}, persist=true, style="radioButtonHorizontal") importPD
-#@ String (label="StarDist", choices={"No", "Yes"}, style="radioButtonHorizontal", persist=true) stardist
 #@ String (label="<html>Save ROIs?</html>", choices={"No", "Yes"}, value="Yes", persist=true, style="radioButtonHorizontal") saveROIs
 #@ String (label=" ", value="<html><img src=\"https://live.staticflickr.com/65535/48557333566_d2a51be746_o.png\"></html>", visibility=MESSAGE, persist=false) logo
 #@ String (label=" ", value="<html><font size=2><b>Neuromolecular Biology Lab</b><br>ERI BIOTECMED - Universitat de València (Spain)</font></html>", visibility=MESSAGE, persist=false) message
@@ -139,7 +138,7 @@ if(illumCorr=="Yes") {
 }
 
 //Extract values from a parameter dataset file
-if(importPD=="Yes") {
+if(project=="Load") {
 	parametersDatasetPath=File.openDialog("Choose the parameter dataset file:");
 	//parameter selection (pre-established)
 	parametersString=File.openAsString(parametersDatasetPath);
@@ -150,34 +149,48 @@ if(importPD=="Yes") {
 		parameters[i]=parameterColumns[1];
 	}
 	projectName=parameters[0];
-	pattern[0]=parameters[1];
-	pattern[1]=parameters[2];
-	pattern[2]=parameters[3];
-	pattern[3]=parameters[4];
-	normalize=parameters[5];
-	gaussianNuclei=parameters[6];
-	thresholdNuclei=parameters[7];
-	erodeNuclei=parameters[8];
-	openNuclei=parameters[9];
-	watershedNuclei=parameters[10];
-	size=parameters[11];
-	flat_field[0]=parameters[12];
-	flat_field[1]=parameters[13];
-	flat_field[2]=parameters[14];
-	flat_field[3]=parameters[15];
+	project=parameters[1];
+	pattern[0]=parameters[2];
+	pattern[1]=parameters[3];
+	pattern[2]=parameters[4];
+	pattern[3]=parameters[5];
+	if (project == "Filtering") {
+		normalize=parameters[6];
+		gaussianNuclei=parameters[7];
+		thresholdNuclei=parameters[8];
+		erodeNuclei=parameters[9];
+		openNuclei=parameters[10];
+		watershedNuclei=parameters[11];
+		size=parameters[12];
+		flat_field[0]=parameters[13];
+		flat_field[1]=parameters[14];
+		flat_field[2]=parameters[15];
+		flat_field[3]=parameters[16];
+	} else {
+		overlap_threshold=parameters[6];
+		size=parameters[7];
+		flat_field[0]=parameters[8];
+		flat_field[1]=parameters[9];
+		flat_field[2]=parameters[10];
+		flat_field[3]=parameters[11];
+	}
 } else {
 	//default parameters
-	projectName="Project";
+	projectName="Project_" + project;
 	pattern[0]=channels_with_empty[0];
 	pattern[1]=channels_with_empty[0];
 	pattern[2]=channels_with_empty[imagesxfield];
 	pattern[3]=channels_with_empty[imagesxfield];
-	normalize=true;
-	gaussianNuclei=2;
-	thresholdNuclei=threshold[6];
-	erodeNuclei=2;
-	openNuclei=2;
-	watershedNuclei=true;
+	if (project == "Filtering") {
+		normalize=true;
+		gaussianNuclei=2;
+		thresholdNuclei=threshold[6];
+		erodeNuclei=2;
+		openNuclei=2;
+		watershedNuclei=true;
+	} else {
+		overlap_threshold=0.4;
+	}
 	size="0-Infinity";
 	flat_field[0]="None";
 	flat_field[1]="None";
@@ -188,7 +201,7 @@ if(importPD=="Yes") {
 //'Select Parameters' dialog box
 title = "Select Parameters";
 Dialog.create(title);
-Dialog.addString("Project", projectName, 40);
+Dialog.addString("Project", projectName , 40);
 Dialog.setInsets(0, 140, 0);
 Dialog.addMessage("CHANNEL SELECTION:");
 Dialog.addChoice("Nuclei", channels, pattern[0]);
@@ -197,16 +210,20 @@ Dialog.addChoice("Nucleoside analogue", channels, pattern[1]);
 Dialog.addChoice("Marker_1", channels_with_empty, pattern[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels_with_empty, pattern[3]);
-Dialog.setInsets(0, 140, 0);
-Dialog.addMessage("SEGMENTATION:");
-Dialog.setInsets(0, 140, 0);
-Dialog.addCheckbox("Normalize", normalize);
-Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
-Dialog.addChoice("setAutoThreshold", threshold, thresholdNuclei);
-Dialog.addNumber("Erode (iterations)", erodeNuclei);
-Dialog.addNumber("Open (iterations)", openNuclei);
-Dialog.setInsets(0, 140, 0);
-Dialog.addCheckbox("Watershed", watershedNuclei);
+if (project == "Filtering") {
+	Dialog.setInsets(0, 140, 0);
+	Dialog.addMessage("SEGMENTATION:");
+	Dialog.setInsets(0, 140, 0);
+	Dialog.addCheckbox("Normalize", normalize);
+	Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
+	Dialog.addChoice("setAutoThreshold", threshold, thresholdNuclei);
+	Dialog.addNumber("Erode (iterations)", erodeNuclei);
+	Dialog.addNumber("Open (iterations)", openNuclei);
+	Dialog.setInsets(0, 140, 0);
+	Dialog.addCheckbox("Watershed", watershedNuclei);
+} else {
+	Dialog.addSlider("Overlap Threshold", 0, 1, overlap_threshold);
+}
 Dialog.addString("Size", size);
 Dialog.setInsets(0, 140, 0);
 Dialog.addMessage("ILLUMINATION CORRECTION IMAGES:");
@@ -227,12 +244,16 @@ pattern[0]=Dialog.getChoice();
 pattern[1]=Dialog.getChoice();
 pattern[2]=Dialog.getChoice();
 pattern[3]=Dialog.getChoice();
-normalize=Dialog.getCheckbox();
-gaussianNuclei=Dialog.getNumber();
-thresholdNuclei=Dialog.getChoice();
-erodeNuclei=Dialog.getNumber();
-openNuclei=Dialog.getNumber();
-watershedNuclei=Dialog.getCheckbox();
+if (project == "Filtering") {
+	normalize=Dialog.getCheckbox();
+	gaussianNuclei=Dialog.getNumber();
+	thresholdNuclei=Dialog.getChoice();
+	erodeNuclei=Dialog.getNumber();
+	openNuclei=Dialog.getNumber();
+	watershedNuclei=Dialog.getCheckbox();
+} else {
+	overlap_threshold=Dialog.getNumber();
+}
 size=Dialog.getString();
 flat_field[0]=Dialog.getChoice();
 flat_field[1]=Dialog.getChoice();
@@ -268,26 +289,28 @@ if(pattern[0]==pattern[1]) {
 	exit("Addititional marker ["+pattern[2]+"]/["+pattern[3]+"] channels can not be the same")
 }
 
-//get min and max sizes
-size=min_max_size(size);
-
 //Create a parameter dataset file
 title1 = "Parameter dataset";
 title2 = "["+title1+"]";
 f = title2;
 run("Table...", "name="+title2+" width=500 height=500");
-print(f, "Project\t" + projectName);
+print(f, "Title\t" + projectName);
+print(f, "Workflow\t" + project);
 print(f, "Nuclei\t" + pattern[0]);
 print(f, "Nucleoside analogue\t" + pattern[1]);
 print(f, "Marker1\t" + pattern[2]);
 print(f, "Marker2\t" + pattern[3]);
-print(f, "Enhance (nuclei)\t" + normalize);
-print(f, "Gaussian (nuclei)\t" + gaussianNuclei);
-print(f, "Threshold (nuclei)\t" + thresholdNuclei);
-print(f, "Erode (nuclei)\t" + erodeNuclei);
-print(f, "Open (nuclei)\t" + openNuclei);
-print(f, "Watershed (nuclei)\t" + watershedNuclei);
-print(f, "Size\t" + size[0]+"-"+size[1]);
+if (project == "Filtering") {
+	print(f, "Enhance (nuclei)\t" + normalize);
+	print(f, "Gaussian (nuclei)\t" + gaussianNuclei);
+	print(f, "Threshold (nuclei)\t" + thresholdNuclei);
+	print(f, "Erode (nuclei)\t" + erodeNuclei);
+	print(f, "Open (nuclei)\t" + openNuclei);
+	print(f, "Watershed (nuclei)\t" + watershedNuclei);
+} else {
+	print(f, "Overlap Threshold\t" + overlap_threshold);
+}
+print(f, "Size\t" + size);
 print(f, "Flat-field (nuclei)\t" + flat_field[0]);
 print(f, "Flat-field (nucleoside analogue)\t" + flat_field[1]);
 print(f, "Flat-field (marker1)\t" + flat_field[2]);
@@ -297,6 +320,9 @@ print(f, "Flat-field (marker2)\t" + flat_field[3]);
 saveAs("txt", dir+File.separator+projectName);
 selectWindow(title1);
 run("Close");
+
+//get min and max sizes
+size=min_max_size(size);
 
 //'Well Selection' dialog box
 selectionOptions=newArray("Select All", "Include", "Exclude");
@@ -316,7 +342,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	Dialog.addSlider("", 1, maxRandomFields, maxRandomFields);
 	measurements=newArray("Area", "Circ.", "AR", "Solidity", "Round", "Mean", "IntDen");
 	Dialog.addChoice("Measure", measurements, "Mean");
-	Dialog.addNumber("Split threshold", 500);
+	Dialog.addNumber("Split threshold", 250);
 	Dialog.addNumber("Set Line Width", 3);
 }
 Dialog.addHelp(html);
@@ -404,7 +430,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 						}
 					}
 
-					if (stardist == "No") {
+					if (project == "Filtering") {
 						// nuclei segmentation
 						selectImage(channels_test[0]);
 						run("Duplicate...", "title=nuclei_mask");
@@ -427,7 +453,7 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 					} else {
 						run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'"+channels_test[0]
 						+"', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', "
-						+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'0.1', 'outputType':'ROI Manager', 'nTiles':'1', "
+						+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'"+overlap_threshold+"', 'outputType':'ROI Manager', 'nTiles':'1', "
 						+"'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', "
 						+"'showProbAndDist':'false'], process=[false]");
 						sizeSelection(size[0], size[1]);
@@ -575,7 +601,7 @@ if(mode=="Analysis") {
 					}
 				}
 
-				if (stardist == "No") {
+				if (project == "Filtering") {
 					// nuclei segmentation
 					selectImage(counterstain);
 					run("Duplicate...", "title=nuclei_mask");
@@ -597,7 +623,7 @@ if(mode=="Analysis") {
 				} else {
 					run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'"+counterstain
 					+"', 'modelChoice':'Versatile (fluorescent nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', "
-					+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'0.1', 'outputType':'ROI Manager', 'nTiles':'1', "
+					+"'percentileTop':'99.8', 'probThresh':'0.479071', 'nmsThresh':'"+overlap_threshold+"', 'outputType':'ROI Manager', 'nTiles':'1', "
 					+"'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'false', "
 					+"'showProbAndDist':'false'], process=[false]");
 					sizeSelection(size[0], size[1]);
