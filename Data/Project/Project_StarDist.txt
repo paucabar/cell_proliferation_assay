@@ -1,0 +1,12 @@
+Title	Project_StarDist
+Workflow	StarDist
+Nuclei	DAPI
+Nucleoside analogue	Cy3
+Marker1	FITC
+Marker2	TL-Brightfield
+Overlap Threshold	0.4
+Size	20-250
+Flat-field (nuclei)	Flat-field_DAPI - DAPI.tif
+Flat-field (nucleoside analogue)	Flat-field_Cy3 - Cy3.tif
+Flat-field (marker1)	Flat-field_FITC - FITC.tif
+Flat-field (marker2)	None
