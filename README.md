@@ -38,30 +38,34 @@ In order to assess the output of the assay it is advisable to use a different so
 
 Download an example [image dataset](https://drive.google.com/drive/folders/1TpVaDCsidEvTLiANmfiKwsXUWDTw9Xes?usp=sharing). Please note that the dataset also includes a subfolder containing correction functions, for the illumination correction of each channel, and a pre-established set of parameters.
 
+**Brief description of the dataset:**
+The example datset consists in a cell proliferation and apoptosis assay, parameters routinely assessed. The dataset was generated using methods widely used in fields such as cancer drug discovery: i) EdU (5-etynil-20-deoxyuridine) pulse-chase to label the genomic DNA of cells undergoing S-phase and ii) caspase3 immunocytochemistry. The dataset was acquired within 4 different channels: i) DAPI for counterstain, ii) Cy3 for EdU, iii) FITC for caspase3 and iv) brightfield.
+
 ## Usage
 
 ### Pre-analysis mode
 
 1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
-3. Check **Load project** to use a pre-stablished set of parameters
+3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different templete workflows for segmentation. *Filtering* is a faster, filter-based approach, whiche requires more parameters to set and is more propense to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on reference images
 5. Note that **Save ROIs** only works within the **Analysis mode**
 6. Ok
 7. If **Load function** is checked, a window will prompt to browse the folder containing the reference image(s)
-8. If **Load project** is checked, a window will prompt to browse the corresponding file
+8. If the **Load** option (**Project**) is checked, a window will prompt to browse the corresponding file
 9. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
 10. Ok
 11. Select the wells to be pre-analysed
 12. Select the number of random images that you want to test per well (up to 10 if the number of fields-of-view is greater than that number)
-13. Select a feature to classify the objects
-14. Select a threshold to split the objects according to the selected feature
-15. Ok
-16. Check the output (_see Figure 1_)
+13. Select a feature to classify the objects (e.g., area, mean gray value, integrated density, circularity, aspect ratio, solidity...). Please note that this parameter (and the two below) will not afect the segmentation, only the visualization of the segmentation (_see Figure 1_)
+14. Select a threshold to split the objects according to the selected feature. Segmented objects will be outlined according to the selected feature and its threshold (_see Figure 1_)
+15. Set the line width of the segmentation outline
+16. Ok
+17. Once the pre-analysis is finished, a stack containing the images for visualization will pop-up
 
 ![image](https://user-images.githubusercontent.com/39589980/81289441-b969bd00-9066-11ea-85df-96e7a98be6ce.png)
 
-**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack. Each image shows the merge of the counterstain (blue) and the nucleoside analogue (red) channels. Additionally, outlines represent the segmentation output of nuclei with different colours, depending on the classification outpt. Objects with feature values less than or equal to the established threshold are outlined in cyan. Conversely, objects with feature values greater the established threshold are outlined in orange. **A)** Visualization of the mean gray value split at 250 (a.u.). **B)** Visualization of the solidity split at 0.9. **a.u.:** arbitrary unit.
+**Figure 1.** _Pre-analysis mode_ output. The macro generates a stack. Each image shows the merge of the counterstain (blue) and the nucleoside analogue (red) channels. Additionally, outlines represent the segmentation output of nuclei with different colours, depending on the classification output. Objects with feature values less than or equal to the established threshold are outlined in cyan. Conversely, objects with feature values greater the established threshold are outlined in orange. **A)** Visualization of the mean gray value split at 250 (a.u.). **B)** Visualization of the solidity split at 0.9. **a.u.:** arbitrary unit.
 
 ### Analysis mode
 
@@ -77,7 +81,7 @@ Download an example [image dataset](https://drive.google.com/drive/folders/1TpVa
 10. Ok
 11. Select the wells to be analysed
 12. Ok
-8. A series of new files will be saved within the selected directory: a parameters set file (.txt), a results table file (.csv), a quality control (QC) metrics file (.csv) and, if checked, the ROI  files (.zip)
+13. A series of new files will be saved within the selected directory: a parameters set file (.txt), a results table file (.csv), a quality control (QC) metrics file (.csv) and, if checked, the ROI  files (.zip)
 
 ## Contributors
 
