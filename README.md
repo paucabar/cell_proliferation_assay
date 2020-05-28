@@ -20,6 +20,13 @@ In order to assess the output of the assay it is advisable to use a different so
 * [Fiji](https://fiji.sc/)
 * Image dataset following an IN Cell Analyzer file naming convention (note that the NeuroMol update site includes a [macroinstruction](https://github.com/paucabar/other_macros) to turn data acquired with diferent high content microscopes into an IN Cell Analyzer file naming convention dataset)
 
+In order to use a StarDist project, add the following upate sites to your Fiji:
+* CSBDeep
+* StarDist
+
+In order to use the Illumination Correction macro, add the following upate sites to your Fiji:
+* BaSiC
+
 ## Installation
 
 1. Start [FIJI](https://fiji.sc/)
@@ -39,19 +46,30 @@ In order to assess the output of the assay it is advisable to use a different so
 Download an example [image dataset](https://drive.google.com/drive/folders/1TpVaDCsidEvTLiANmfiKwsXUWDTw9Xes?usp=sharing). Please note that the dataset also includes a subfolder containing correction functions, for the illumination correction of each channel, and a pre-established set of parameters.
 
 **Brief description of the dataset:**
+
 The example datset consists in a cell proliferation and apoptosis assay, parameters routinely assessed. The dataset was generated using methods widely used in fields such as cancer drug discovery: i) EdU (5-etynil-20-deoxyuridine) pulse-chase to label the genomic DNA of cells undergoing S-phase and ii) caspase3 immunocytochemistry. The dataset was acquired within 4 different channels: i) DAPI for counterstain, ii) Cy3 for EdU, iii) FITC for caspase3 and iv) brightfield.
 
 ## Usage
 
+### Illumination correction (optional)
+
+The NeuroMol Lab collection includes an [Illumination Correction macro](https://github.com/paucabar/other_macros) which allows to perform both obtain the illumination correction function for each channel and generate a corrected dataset. The calculation of the correction functions of a large dataset may require long computation time and corrected images will be saved as a new dataset, doubling the experiment size. For these reasons, it is advisable to just obtain the correction functions and apply them in the **Cell Proliferation** workflow. To generate the correction function of an image dataset:
+
+1. Run the Illumination Correction [macro](https://github.com/paucabar/other_macros) (<code>Plugins > NeuroMol Lab > other macros > Illumination Correction</code>)
+2. Select the *Generate correction function* mode
+3. Select the directory containing the image dataset (.tif files)
+4. Ok
+5. Correction functions (.tif) will be saved in a new folder created in the parent of the selected directory.
+
 ### Pre-analysis mode
 
-1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
+1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
 3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different templete workflows for segmentation. *Filtering* is a faster, filter-based approach, whiche requires more parameters to set and is more propense to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
-4. Check **Load function** to perform illumination correction based on reference images
+4. Check **Load function** to perform illumination correction based on correction functions
 5. Note that **Save ROIs** only works within the **Analysis mode**
 6. Ok
-7. If **Load function** is checked, a window will prompt to browse the folder containing the reference image(s)
+7. If **Load function** is checked, a window will prompt to browse the folder containing the correction functions
 8. If the **Load** option (**Project**) is checked, a window will prompt to browse the corresponding file
 9. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
 10. Ok
@@ -69,14 +87,14 @@ The example datset consists in a cell proliferation and apoptosis assay, paramet
 
 ### Analysis mode
 
-1. Run the **Cell proliferationHCS** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
+1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
-3. Check **Load project** to use a pre-stablished set of parameters
-4. Check **Load function** to perform illumination correction based on reference images
+3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different templete workflows for segmentation. *Filtering* is a faster, filter-based approach, whiche requires more parameters to set and is more propense to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
+4. Check **Load function** to perform illumination correction based on correction functions
 5. Check **Save ROIs** to save the nuclei ROIs
 6. Ok
-7. If **Load function** is checked, a window will prompt to browse the folder containing the reference image(s)
-8. If **Load project** is checked, a window will prompt to browse the corresponding file
+7. If **Load function** is checked, a window will prompt to browse the folder containing the correction functions
+8. If the **Load** option (**Project**) is checked, a window will prompt to browse the corresponding file
 9. Adjust the parameters. Know more about the parameters of the workflow on the **wiki page (not yet)**
 10. Ok
 11. Select the wells to be analysed
