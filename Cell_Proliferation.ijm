@@ -210,9 +210,9 @@ Dialog.addChoice("Nucleoside analogue", channels, pattern[1]);
 Dialog.addChoice("Marker_1", channels_with_empty, pattern[2]);
 Dialog.addToSameRow();
 Dialog.addChoice("Marker_2", channels_with_empty, pattern[3]);
+Dialog.setInsets(0, 140, 0);
+Dialog.addMessage("SEGMENTATION:");
 if (project == "Filtering") {
-	Dialog.setInsets(0, 140, 0);
-	Dialog.addMessage("SEGMENTATION:");
 	Dialog.setInsets(0, 140, 0);
 	Dialog.addCheckbox("Normalize", normalize);
 	Dialog.addNumber("Gaussian Blur (sigma)", gaussianNuclei);
@@ -222,11 +222,11 @@ if (project == "Filtering") {
 	Dialog.setInsets(0, 140, 0);
 	Dialog.addCheckbox("Watershed", watershedNuclei);
 } else {
-	Dialog.addSlider("Overlap Threshold", 0, 1, overlap_threshold);
+	Dialog.addSlider("Overlap", 0, 1, overlap_threshold);
 }
 Dialog.addString("Size", size);
 Dialog.setInsets(0, 140, 0);
-Dialog.addMessage("ILLUMINATION CORRECTION IMAGES:");
+Dialog.addMessage("CORRECTION FUNCTIONS:");
 Dialog.addChoice("Nuclei", illumCorrList, flat_field[0]);
 Dialog.addToSameRow();
 Dialog.addChoice("Nucleoside analogue", illumCorrList, flat_field[1]);
@@ -332,23 +332,23 @@ title = "Select Wells";
 Dialog.create(title);
 Dialog.addRadioButtonGroup("", selectionOptions, 3, 1, selectionOptions[0]);
 Dialog.addCheckboxGroup(sqrt(nWells) + 1, sqrt(nWells) + 1, wellName, selection);		
+Dialog.addHelp(html);
+Dialog.show();
+selectionMode=Dialog.getRadioButton();
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	if(fieldsxwell>=10) {
 		maxRandomFields=10;
 	} else {
 		maxRandomFields=fieldsxwell;
 	}
-	Dialog.addMessage("Random fields per well:");
-	Dialog.addSlider("", 1, maxRandomFields, maxRandomFields);
+	title = "Visualization outlines";
+	Dialog.create(title);
+	Dialog.addSlider("Random fields/well", 1, maxRandomFields, maxRandomFields);
 	measurements=newArray("Area", "Circ.", "AR", "Solidity", "Round", "Mean", "IntDen");
 	Dialog.addChoice("Measure", measurements, "Mean");
 	Dialog.addNumber("Split threshold", 250);
-	Dialog.addNumber("Set Line Width", 3);
-}
-Dialog.addHelp(html);
-Dialog.show();
-selectionMode=Dialog.getRadioButton();
-if(mode=="Pre-Analysis (parameter tweaking)") {
+	Dialog.addNumber("Set Line Width", 2);
+	Dialog.show();
 	maxRandomFields=Dialog.getNumber();
 	measure_test=Dialog.getChoice();
 	split_test=Dialog.getNumber();
