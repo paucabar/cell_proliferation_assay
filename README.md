@@ -65,7 +65,7 @@ The NeuroMol Lab collection includes an [Illumination Correction macro](https://
 
 1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
-3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different template workflows for segmentation. *Filtering* is a faster filter-based approach, al itthough it requires more parameters to be set and is more prone to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
+3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different template workflows for segmentation. *Filtering* is a faster filter-based approach, although it requires more parameters to be set and is more prone to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on correction functions
 5. Note that **Save ROIs** only works within the **Analysis mode**
 6. Ok
@@ -90,7 +90,7 @@ The NeuroMol Lab collection includes an [Illumination Correction macro](https://
 
 1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
-3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different templete workflows for segmentation. *Filtering* is a faster, filter-based approach, whiche requires more parameters to set and is more propense to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
+3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different template workflows for segmentation. *Filtering* is a faster filter-based approach, although it requires more parameters to be set and is more prone to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on correction functions
 5. Check **Save ROIs** to save the nuclei ROIs
 6. Ok
