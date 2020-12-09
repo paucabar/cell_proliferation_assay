@@ -335,6 +335,31 @@ Dialog.addCheckboxGroup(sqrt(nWells) + 1, sqrt(nWells) + 1, wellName, selection)
 Dialog.addHelp(html);
 Dialog.show();
 selectionMode=Dialog.getRadioButton();
+
+for (i=0; i<wellName.length; i++) {
+	fileCheckbox[i]=Dialog.getCheckbox();
+	if (selectionMode=="Select All") {
+		fileCheckbox[i]=true;
+	} else if (selectionMode=="Exclude") {
+		if (fileCheckbox[i]==true) {
+			fileCheckbox[i]=false;
+		} else {
+			fileCheckbox[i]=true;
+		}
+	}
+}
+
+
+//check that at least one well have been selected
+checkSelection = 0;
+for (i=0; i<nWells; i++) {
+	checkSelection += fileCheckbox[i];
+}
+
+if (checkSelection == 0) {
+	exit("There is no well selected");
+}
+
 if(mode=="Pre-Analysis (parameter tweaking)") {
 	if(fieldsxwell>=10) {
 		maxRandomFields=10;
@@ -354,29 +379,6 @@ if(mode=="Pre-Analysis (parameter tweaking)") {
 	split_test=Dialog.getNumber();
 	roi_line_width=Dialog.getNumber();
 }
-
-for (i=0; i<wellName.length; i++) {
-	fileCheckbox[i]=Dialog.getCheckbox();
-	if (selectionMode=="Select All") {
-		fileCheckbox[i]=true;
-	} else if (selectionMode=="Exclude") {
-		if (fileCheckbox[i]==true) {
-			fileCheckbox[i]=false;
-		} else {
-			fileCheckbox[i]=true;
-		}
-	}
-}
-
-//check that at least one well have been selected
-checkSelection = 0;
-for (i=0; i<nWells; i++) {
-	checkSelection += fileCheckbox[i];
-}
-
-if (checkSelection == 0) {
-	exit("There is no well selected");
-}
 
 // PRE-ANALYSIS WORKFLOW
 if(mode=="Pre-Analysis (parameter tweaking)") {
