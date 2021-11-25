@@ -35,7 +35,7 @@ In order to use the Illumination Correction macro, add the following upate sites
 4. Click on <code>Add update site</code>
 5. A new blank row is to be created at the bottom of the update sites list
 6. Type **NeuroMol Lab** in the **Name** column
-7. Type **http://sites.imagej.net/Paucabar/** in the **URL** column
+7. Type **https://sites.imagej.net/NeuroMol-Lab/** in the **URL** column
 8. <code>Close</code> the update sites window
 9. <code>Apply changes</code>
 10. Restart FIJI
@@ -55,7 +55,7 @@ The example dataset consists in a typical cell proliferation and apoptosis assay
 
 The NeuroMol Lab collection includes an [Illumination Correction macro](https://github.com/paucabar/other_macros) which allows to generate a corrected dataset, as wells as obtain the illumination correction function for each of the channels. The calculation of the correction functions of a large dataset may require long computation time and corrected images will be saved as a new dataset, doubling the experiment size. For these reasons, it is advisable to just obtain the correction functions and apply them in the **Cell Proliferation** workflow. To generate the correction function of an image dataset:
 
-1. Run the Illumination Correction [macro](https://github.com/paucabar/other_macros) (<code>Plugins > NeuroMol Lab > other macros > Illumination Correction</code>)
+1. Run the Illumination Correction [macro](https://github.com/paucabar/other_macros) (<code>Plugins > NeuroMol-Lab > other macros > Illumination Correction</code>)
 2. Select the *Generate correction function* mode
 3. Select the directory containing the image dataset (.tif files)
 4. Ok
@@ -63,7 +63,7 @@ The NeuroMol Lab collection includes an [Illumination Correction macro](https://
 
 ### Pre-analysis mode
 
-1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
+1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol-Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
 3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different template workflows for segmentation. *Filtering* is a faster filter-based approach, although it requires more parameters to be set and is more prone to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on correction functions
@@ -88,7 +88,7 @@ The NeuroMol Lab collection includes an [Illumination Correction macro](https://
 
 ### Analysis mode
 
-1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol Lab > Cell Proliferation > Cell proliferation</code>)
+1. Run the **Cell Proliferation** macro (<code>Plugins > NeuroMol-Lab > Cell Proliferation > Cell proliferation</code>)
 2. Select the directory containing the images (.tif files)
 3. Select the type of **Project** to be applied. *Filtering* and *StarDist* are different template workflows for segmentation. *Filtering* is a faster filter-based approach, although it requires more parameters to be set and is more prone to merge and split objects. *StarDist* is a deep-learning approach which uses the *Versatile (fluorescent nuclei)* pre-trained model of this Fiji plugin. *StarDist* is slower but can perform a much more accurate segmentation if the dataset is reasonably similar to the pre-trained one (object size may be crucial). It is also possible to *Load* a pre-stablished set of parameters
 4. Check **Load function** to perform illumination correction based on correction functions
