@@ -96,11 +96,17 @@ for (i=0; i<nWells; i++) {
 }
 
 //create an array containing the field codes
+if (imagesxfield > 99) {
+	nDigitsField=3;
+} else {
+	nDigitsField=2;
+}
+
 fieldName=newArray(fieldsxwell);
 for (i=0; i<fieldsxwell; i++) {
 	fieldName[i]=i+1;
 	fieldName[i]=d2s(fieldName[i], 0);
-	while (lengthOf(fieldName[i])<3) {
+	while (lengthOf(fieldName[i])<nDigitsField) {
 		fieldName[i]="0"+fieldName[i];
 	}
 }
